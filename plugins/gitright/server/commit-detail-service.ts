@@ -296,10 +296,17 @@ function parseDetail(output: Buffer): ParsedDetail | null {
     sha: rawSha,
     parents,
     authorName: sanitizeLine(rawAuthor),
-    authorDate: rawAuthorDate,
-    committerDate: rawCommitterDate,
+    authorDate: canonicalGitDate(rawAuthorDate),
+    committerDate: canonicalGitDate(rawCommitterDate),
     message: sanitizeMessage(rawMessage),
   };
+}
+
+// Git before 2.45 prints a UTC strict-ISO date as "+00:00" while newer Git
+// prints "Z"; canonicalize so the recorded date does not depend on the
+// installed Git version.
+function canonicalGitDate(value: string): string {
+  return value.endsWith("+00:00") ? `${value.slice(0, -"+00:00".length)}Z` : value;
 }
 
 function splitNul(output: Buffer): Buffer[] | null {
