@@ -63,6 +63,7 @@ the [Security Policy](./SECURITY.md) and
 ## Documentation
 
 - [Architecture](./docs/architecture.md)
+- [Architecture decision records](./docs/adr/)
 - [Compatibility](./docs/compatibility.md)
 - [Development](./docs/development.md)
 - [Verification](./docs/verification.md)
