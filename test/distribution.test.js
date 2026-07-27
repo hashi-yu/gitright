@@ -68,6 +68,7 @@ test("plugin source follows the accepted production layout", async () => {
     ".codex-plugin",
     ".mcp.json",
     "dist",
+    "launcher",
     "server",
     "skills",
     "widget",
@@ -315,7 +316,7 @@ test("distribution proof runs only the staged plugin package with network denied
   assert.match(result.stdout, /diagnostics=PASS/);
 });
 
-test("pinned Bun deterministically rebuilds the committed server bundle", async () => {
+test("pinned Bun deterministically rebuilds the current dist reference", async () => {
   const result = await run(distProof, [], {
     cwd: repositoryRoot,
     env: process.env,
@@ -325,6 +326,11 @@ test("pinned Bun deterministically rebuilds the committed server bundle", async 
   assert.equal(result.stderr, "");
   assert.match(result.stdout, /bun_version=1\.3\.14/);
   assert.match(result.stdout, /byte_identical=true/);
-  assert.match(result.stdout, /committed_dist_matches=true/);
+  assert.match(
+    result.stdout,
+    /reference_kind=(?:committed-release-payload|local-build-output)/,
+  );
+  assert.match(result.stdout, /reference_dist_matches=true/);
+  assert.match(result.stdout, /launcher_mode=755/);
   assert.match(result.stdout, /widget_bytes=[1-9][0-9]*/);
 });

@@ -20,14 +20,21 @@ Install the locked dependencies:
 npm ci
 ```
 
-Build the widget and Bun server:
+Build the local installable payload:
 
 ```sh
 npm run build:dist
 ```
 
-The generated files in `plugins/gitright/dist/` are part of the installable
-plugin. Commit an updated payload when its source inputs change.
+This copies the handwritten POSIX launcher from
+`plugins/gitright/launcher/launch` and generates `server.js`, `widget.js`, and
+`widget.css` under `plugins/gitright/dist/`. The local `dist/` directory is
+ignored on `main`; the npm test commands build it automatically before running.
+
+Release refs keep carrying the installable payload. A release commit contains
+the source plus a fresh `npm run build:dist` result, that commit advances
+`beta`, and the release tag points at the same commit. Run `npm run proof:dist`
+on the release ref before advancing either release reference.
 
 ## Run checks
 
