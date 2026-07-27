@@ -60,6 +60,18 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ matrix.bun-version }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Build the ignored main payload when the ref does not commit dist
+        run: |
+          if git ls-files --error-unmatch -- plugins/gitright/dist/server.js >/dev/null 2>&1; then
+            echo "Using the committed release payload."
+          else
+            npm ci
+            npm run build:dist
+          fi
       - name: Stage the architecture-neutral plugin package
         env:
           EXPECTED_ARCHITECTURE: ${{ matrix.architecture }}
@@ -81,7 +93,7 @@ jobs:
           test ! -e "$RUNNER_TEMP/gitright-proof/package/node_modules"
           rm -rf "$GITHUB_WORKSPACE"
           mkdir -p "$GITHUB_WORKSPACE"
-      - name: Launch the prebuilt payload offline without source or local build
+      - name: Launch the staged payload offline without source or runtime build
         working-directory: ${{ runner.temp }}/gitright-proof
         env:
           BUN_BIN: ${{ steps.bun.outputs.bun-path }}

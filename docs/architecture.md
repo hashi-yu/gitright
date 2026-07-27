@@ -6,9 +6,11 @@ a Bun MCP server, and an Apps SDK widget.
 ## Installation and startup
 
 The marketplace entry installs one architecture-neutral plugin package with a
-prebuilt server bundle and widget assets. `plugins/gitright/dist/launch` locates
-a user-provided Bun runtime, verifies `>=1.3.14 <2.0.0`, and starts the committed
-server bundle. Users do not install plugin dependencies or build the widget.
+prebuilt server bundle and widget assets. The handwritten launcher lives at
+`plugins/gitright/launcher/launch` in source and is copied to
+`plugins/gitright/dist/launch` for the installable package. It locates a
+user-provided Bun runtime, verifies `>=1.3.14 <2.0.0`, and starts the bundled
+server. Users do not install plugin dependencies or build the widget.
 
 ## Repository binding
 

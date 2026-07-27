@@ -1104,7 +1104,7 @@ test("packaged app keeps long changed-file rows inside the supported 380px viewp
   try {
     // Mount auto-selects the only commit; its files populate the sheet.
     const row = host.widget.getByRole("button", {
-      name: /installed-codex-narrow-detail-changed-files-viewport-evidence\.json/,
+      name: /very-long-changed-file-viewport-fixture\.json/,
     });
     await row.waitFor();
     assert.equal(await row.getAttribute("title"), fullPath);

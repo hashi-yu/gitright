@@ -20,14 +20,21 @@ accessibility, localization, installation, and host integration.
 Use Bun 1.3.14 and run:
 
 ```sh
+npm run build:dist
 npm run proof:dist
 npm run proof:distribution
 ```
 
-The first command rebuilds the widget and server twice and checks that the
-committed payload is byte-identical. The second stages only the installable
-plugin package, exercises the runtime preflight and a representative read-only
-operation, and verifies runtime operation with network access denied.
+On `main`, `build:dist` creates the ignored local payload used by tests and
+proofs. On a release ref, `dist/` is committed as the installable payload.
+`proof:dist` rebuilds the launcher, widget, and server twice and checks that
+both rebuilds match the current `dist/` reference; its output records whether
+that reference is local build output or a committed release payload. A release
+claim is valid only for the latter.
+
+`proof:distribution` stages only the current installable plugin package,
+exercises the runtime preflight and a representative read-only operation, and
+verifies runtime operation with network access denied.
 
 ## Git compatibility
 
