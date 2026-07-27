@@ -32,11 +32,18 @@ function timedOutResult(stdout = "") {
   };
 }
 
-function detailOutput({ commitSha, parents, author = "Ada", message = "Full message\n" }) {
+function detailOutput({
+  commitSha,
+  parents,
+  author = "Ada",
+  message = "Full message\n",
+  authorDate = "2026-07-13T09:10:11+09:00",
+  committerDate = "2026-07-13T10:11:12-04:00",
+}) {
   return Buffer.from(
     `${commitSha}\0${parents.join(" ")}\0${author}\0` +
-      "2026-07-13T09:10:11+09:00\0" +
-      "2026-07-13T10:11:12-04:00\0" +
+      `${authorDate}\0` +
+      `${committerDate}\0` +
       `${message}\0\n`,
   );
 }
@@ -95,6 +102,8 @@ function createFixture({
   diffsByPath = new Map(),
   author,
   message,
+  authorDate,
+  committerDate,
 }) {
   const operations = [];
   return {
@@ -103,7 +112,9 @@ function createFixture({
       detail: async (_repository, operation, objectIds, pathspecs = []) => {
         operations.push({ operation, objectIds: [...objectIds], pathspecs: [...pathspecs] });
         if (operation === "commit-detail") {
-          return result(detailOutput({ commitSha, parents, author, message }));
+          return result(
+            detailOutput({ commitSha, parents, author, message, authorDate, committerDate }),
+          );
         }
         if (operation === "file-diff") {
           const diff = diffsByPath.get(pathspecs.join("\0")) ?? Buffer.alloc(0);
@@ -138,6 +149,38 @@ function binding(commitSha, parents) {
     ],
   };
 }
+
+test("canonicalizes UTC recorded dates independent of the Git version", async () => {
+  const commitSha = sha(10);
+  const parents = [sha(9)];
+  const fixture = createFixture({
+    commitSha,
+    parents,
+    filesByParent: new Map([[parents[0], []]]),
+    authorDate: "2026-01-01T00:00:00+00:00",
+    committerDate: "2026-01-01T00:00:00Z",
+  });
+  const service = createCommitDetailService(
+    fixture.executor,
+    (value) => `local:${value}`,
+  );
+
+  const detail = await service.load(
+    "/tmp/repository",
+    { snapshotId: "a".repeat(64), parentIndex: 0 },
+    binding(commitSha, parents),
+  );
+
+  assert.equal(detail.status, "ready");
+  assert.deepEqual(detail.authorDate, {
+    recorded: "2026-01-01T00:00:00Z",
+    local: "local:2026-01-01T00:00:00Z",
+  });
+  assert.deepEqual(detail.committerDate, {
+    recorded: "2026-01-01T00:00:00Z",
+    local: "local:2026-01-01T00:00:00Z",
+  });
+});
 
 test("loads sanitized commit metadata and the first changed-file page", async () => {
   const commitSha = sha(10);
