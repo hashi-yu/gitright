@@ -1,0 +1,585 @@
+{
+  "version": 1,
+  "reviewStatus": "approved",
+  "review": {
+    "reviewer": "hashi-yu",
+    "reviewedOn": "2026-07-24",
+    "candidateSha": "952ab5778a797300f169c20984dcc0706aa4da42",
+    "widgetSha256": "a9429a66d27ce2e3db8800155154f21aad31f343be9e08e3227c1251aa0d0d5d",
+    "attestationPath": "docs/proofs/fixtures/visual-baseline/attestation-2026-07-24.md",
+    "attestationSha256": "19c47bf8fa01e6b16da53c66fa773d4f94a281c1742d4855dde5d44a87d9f55d"
+  },
+  "packagedResource": {
+    "uri": "ui://gitright/repository-state-v2.html",
+    "mimeType": "text/html;profile=mcp-app"
+  },
+  "captureInputs": {
+    "browser": {
+      "engine": "chromium",
+      "version": "149.0.7827.55",
+      "executablePath": "/Users/<user>/Library/Caches/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+    },
+    "viewportHeightPx": 900,
+    "widths": {
+      "narrow": 380,
+      "wide": 720
+    },
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "locales": {
+      "en": "en-US",
+      "ja": "ja-JP"
+    },
+    "deviceScaleFactor": 1,
+    "reducedMotion": "reduce",
+    "safeAreaInsets": {
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "displayModes": {
+      "launcher": "inline",
+      "completeView": "fullscreen"
+    },
+    "historySnapshotTime": 1767225605,
+    "browserNetworkPolicy": "block-and-record-http-and-https",
+    "serverEnvironment": {
+      "TZ": "UTC",
+      "LANG": "en_US.UTF-8",
+      "LC_ALL": "en_US.UTF-8"
+    },
+    "typography": [
+      {
+        "width": "narrow",
+        "theme": "light",
+        "locale": "en",
+        "fingerprint": {
+          "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Text\", \"Hiragino Sans\", \"Segoe UI\", sans-serif",
+          "text": "Graph topology",
+          "widthPx": 117.390625
+        }
+      },
+      {
+        "width": "narrow",
+        "theme": "light",
+        "locale": "ja",
+        "fingerprint": {
+          "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Text\", \"Hiragino Sans\", \"Segoe UI\", sans-serif",
+          "text": "グラフトポロジー",
+          "widthPx": 128
+        }
+      },
+      {
+        "width": "narrow",
+        "theme": "dark",
+        "locale": "en",
+        "fingerprint": {
+          "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Text\", \"Hiragino Sans\", \"Segoe UI\", sans-serif",
+          "text": "Graph topology",
+          "widthPx": 117.390625
+        }
+      },
+      {
+        "width": "narrow",
+        "theme": "dark",
+        "locale": "ja",
+        "fingerprint": {
+          "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Text\", \"Hiragino Sans\", \"Segoe UI\", sans-serif",
+          "text": "グラフトポロジー",
+          "widthPx": 128
+        }
+      },
+      {
+        "width": "wide",
+        "theme": "light",
+        "locale": "en",
+        "fingerprint": {
+          "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Text\", \"Hiragino Sans\", \"Segoe UI\", sans-serif",
+          "text": "Graph topology",
+          "widthPx": 117.390625
+        }
+      },
+      {
+        "width": "wide",
+        "theme": "light",
+        "locale": "ja",
+        "fingerprint": {
+          "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Text\", \"Hiragino Sans\", \"Segoe UI\", sans-serif",
+          "text": "グラフトポロジー",
+          "widthPx": 128
+        }
+      },
+      {
+        "width": "wide",
+        "theme": "dark",
+        "locale": "en",
+        "fingerprint": {
+          "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Text\", \"Hiragino Sans\", \"Segoe UI\", sans-serif",
+          "text": "Graph topology",
+          "widthPx": 117.390625
+        }
+      },
+      {
+        "width": "wide",
+        "theme": "dark",
+        "locale": "ja",
+        "fingerprint": {
+          "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Text\", \"Hiragino Sans\", \"Segoe UI\", sans-serif",
+          "text": "グラフトポロジー",
+          "widthPx": 128
+        }
+      }
+    ]
+  },
+  "packageInputs": {
+    "package-lock.json": "74de5354f6b35ac3ecc2c72678a720bea9a3d0848eeb5aae48dad997e5947e13",
+    "plugins/gitright/dist/server.js": "49dab11bf5209faa5cf1dc9d49f33b5ebcf3987f329e6cca277c2c8fd679606a",
+    "plugins/gitright/dist/widget.js": "a9429a66d27ce2e3db8800155154f21aad31f343be9e08e3227c1251aa0d0d5d",
+    "plugins/gitright/dist/widget.css": "3da914133db62146d0b74e3f252bbfe82bc6d34acd9b56de75555419225d6ee7"
+  },
+  "cases": [
+    {
+      "file": "diff-narrow-dark-en.png",
+      "kind": "primary",
+      "surface": "diff",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "dark",
+      "locale": "en",
+      "bytes": 44839,
+      "sha256": "23550c32f83c90b993a9cecf9c759fe0cc93a97536569972ba9239215e257ec2"
+    },
+    {
+      "file": "diff-narrow-dark-ja.png",
+      "kind": "primary",
+      "surface": "diff",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "dark",
+      "locale": "ja",
+      "bytes": 45442,
+      "sha256": "e04060f4582cc06159a5b43255e0e48d89cb4f201cf7b6955d9d3418a62bdc8a"
+    },
+    {
+      "file": "diff-narrow-light-en.png",
+      "kind": "primary",
+      "surface": "diff",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "light",
+      "locale": "en",
+      "bytes": 42851,
+      "sha256": "aa04192e353a02ca556394966cc48a4e09d1b914db236e5b5044228acde79277"
+    },
+    {
+      "file": "diff-narrow-light-ja.png",
+      "kind": "primary",
+      "surface": "diff",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "light",
+      "locale": "ja",
+      "bytes": 43255,
+      "sha256": "c063e05e043aa06c8399838014f7cc63981e841f968b04b6f22987d2b0eba098"
+    },
+    {
+      "file": "diff-wide-dark-en.png",
+      "kind": "primary",
+      "surface": "diff",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "dark",
+      "locale": "en",
+      "bytes": 66528,
+      "sha256": "108a492eb9a35a9f49e48404afefec735de57e556390a26102fa52d1e57a2083"
+    },
+    {
+      "file": "diff-wide-dark-ja.png",
+      "kind": "primary",
+      "surface": "diff",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "dark",
+      "locale": "ja",
+      "bytes": 68123,
+      "sha256": "a9e2afd6ad379b699507e326abd8993c912600b4d73b573fe0abeebbc53f9058"
+    },
+    {
+      "file": "diff-wide-light-en.png",
+      "kind": "primary",
+      "surface": "diff",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "light",
+      "locale": "en",
+      "bytes": 64316,
+      "sha256": "1fe57fe655c1d5e873c8ba66a74d274b77e73e8bdbefd4d63b3fb178a04eb42d"
+    },
+    {
+      "file": "diff-wide-light-ja.png",
+      "kind": "primary",
+      "surface": "diff",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "light",
+      "locale": "ja",
+      "bytes": 65584,
+      "sha256": "1f888c390c646a2d87cea971a0db695e8d4b1759f973759d26214f0c792905f2"
+    },
+    {
+      "file": "empty-narrow-dark-en.png",
+      "kind": "lifecycle",
+      "state": "empty",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "dark",
+      "locale": "en",
+      "bytes": 14972,
+      "sha256": "d241bad4a869c340ab66c38990c6ce7fe14ef2228e71954a3c52a8cb39212bd0"
+    },
+    {
+      "file": "empty-wide-light-ja.png",
+      "kind": "lifecycle",
+      "state": "empty",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "light",
+      "locale": "ja",
+      "bytes": 23005,
+      "sha256": "50824c35c37b7e1c67df74e5295fcfa0f849d67e10785d277646d9b9e12c9d54"
+    },
+    {
+      "file": "error-narrow-dark-ja.png",
+      "kind": "lifecycle",
+      "state": "error",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "dark",
+      "locale": "ja",
+      "bytes": 18172,
+      "sha256": "9471654044a45628820b07ebe4dde30cdca8f28abcedda4d40e2a2afafb93a69"
+    },
+    {
+      "file": "error-wide-light-en.png",
+      "kind": "lifecycle",
+      "state": "error",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "light",
+      "locale": "en",
+      "bytes": 21964,
+      "sha256": "61595ae96dd7dbaf1768eab5427e264d97227cbe576956f0837ee3141f9b62dd"
+    },
+    {
+      "file": "history-narrow-dark-en.png",
+      "kind": "primary",
+      "surface": "history",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "dark",
+      "locale": "en",
+      "bytes": 38770,
+      "sha256": "c29591d81981358f6c92c2dd4aa788ba57e30060905bd04f593f6df1f90e7f96"
+    },
+    {
+      "file": "history-narrow-dark-ja.png",
+      "kind": "primary",
+      "surface": "history",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "dark",
+      "locale": "ja",
+      "bytes": 39988,
+      "sha256": "6472a9806d0b4b33a43391acb6558444a3a1078eeb17e6b84c51c55a96ed6908"
+    },
+    {
+      "file": "history-narrow-light-en.png",
+      "kind": "primary",
+      "surface": "history",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "light",
+      "locale": "en",
+      "bytes": 37394,
+      "sha256": "78873f9e39b77e8db714cdd4bb829f1565ca53d442834e0cc5125d395bba7880"
+    },
+    {
+      "file": "history-narrow-light-ja.png",
+      "kind": "primary",
+      "surface": "history",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "light",
+      "locale": "ja",
+      "bytes": 38521,
+      "sha256": "8518d14bc9fb79f21695bbaf9e6758394177aa78de67b65c710e19367309c36c"
+    },
+    {
+      "file": "history-wide-dark-en.png",
+      "kind": "primary",
+      "surface": "history",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "dark",
+      "locale": "en",
+      "bytes": 52210,
+      "sha256": "24c786ce904abe36d751adc3b18f80917536f1f91ee7c557fc467c8f0b5b4a70"
+    },
+    {
+      "file": "history-wide-dark-ja.png",
+      "kind": "primary",
+      "surface": "history",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "dark",
+      "locale": "ja",
+      "bytes": 54354,
+      "sha256": "aba0dd01d61b3eedd11f59b73b0b395bfad629bd591de2e96f2d0f4e17645ab1"
+    },
+    {
+      "file": "history-wide-light-en.png",
+      "kind": "primary",
+      "surface": "history",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "light",
+      "locale": "en",
+      "bytes": 50414,
+      "sha256": "c60b89bade263012320ce29b63e51e539ea25c7dae134252515c84451c40ee62"
+    },
+    {
+      "file": "history-wide-light-ja.png",
+      "kind": "primary",
+      "surface": "history",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "light",
+      "locale": "ja",
+      "bytes": 52195,
+      "sha256": "e5102ce0eb0e26339b3b291a49e6b9ac040325b7d28da4723c378bd5ebfb6917"
+    },
+    {
+      "file": "launcher-narrow-dark-en.png",
+      "kind": "primary",
+      "surface": "launcher",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "dark",
+      "locale": "en",
+      "bytes": 9802,
+      "sha256": "e709a364984cbb76f30bb08d81ff19fb1b6ac70d20da5e51ba6150cdc876e2b3"
+    },
+    {
+      "file": "launcher-narrow-dark-ja.png",
+      "kind": "primary",
+      "surface": "launcher",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "dark",
+      "locale": "ja",
+      "bytes": 9802,
+      "sha256": "e709a364984cbb76f30bb08d81ff19fb1b6ac70d20da5e51ba6150cdc876e2b3"
+    },
+    {
+      "file": "launcher-narrow-light-en.png",
+      "kind": "primary",
+      "surface": "launcher",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "light",
+      "locale": "en",
+      "bytes": 9221,
+      "sha256": "2d73933e031c2d5eb4bafae29400d85cd47dbdc6332ec9e84791adaab040835b"
+    },
+    {
+      "file": "launcher-narrow-light-ja.png",
+      "kind": "primary",
+      "surface": "launcher",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "light",
+      "locale": "ja",
+      "bytes": 9221,
+      "sha256": "2d73933e031c2d5eb4bafae29400d85cd47dbdc6332ec9e84791adaab040835b"
+    },
+    {
+      "file": "launcher-wide-dark-en.png",
+      "kind": "primary",
+      "surface": "launcher",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "dark",
+      "locale": "en",
+      "bytes": 11089,
+      "sha256": "a349faa64ac0dd8256bfd8dae18388982f08dd387701ab66c5eef209630cbbc1"
+    },
+    {
+      "file": "launcher-wide-dark-ja.png",
+      "kind": "primary",
+      "surface": "launcher",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "dark",
+      "locale": "ja",
+      "bytes": 11089,
+      "sha256": "a349faa64ac0dd8256bfd8dae18388982f08dd387701ab66c5eef209630cbbc1"
+    },
+    {
+      "file": "launcher-wide-light-en.png",
+      "kind": "primary",
+      "surface": "launcher",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "light",
+      "locale": "en",
+      "bytes": 10491,
+      "sha256": "3091f03f381ffab210f0fb9aec1290a1f8d12ebeb8074ee55076071cbf33a229"
+    },
+    {
+      "file": "launcher-wide-light-ja.png",
+      "kind": "primary",
+      "surface": "launcher",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "light",
+      "locale": "ja",
+      "bytes": 10491,
+      "sha256": "3091f03f381ffab210f0fb9aec1290a1f8d12ebeb8074ee55076071cbf33a229"
+    },
+    {
+      "file": "loading-narrow-light-en.png",
+      "kind": "lifecycle",
+      "state": "loading",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "light",
+      "locale": "en",
+      "bytes": 16393,
+      "sha256": "4a5443d80ca2934211a5b63977fc2d60e6156528ac8bb8b61703335989b6e9f2"
+    },
+    {
+      "file": "loading-wide-dark-ja.png",
+      "kind": "lifecycle",
+      "state": "loading",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "dark",
+      "locale": "ja",
+      "bytes": 26375,
+      "sha256": "b2c07f6501bdb2471688e7a0d29fee9caf82f270c119ae3c756c3d20f524baf6"
+    },
+    {
+      "file": "search-narrow-dark-en.png",
+      "kind": "primary",
+      "surface": "search",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "dark",
+      "locale": "en",
+      "bytes": 40427,
+      "sha256": "f2a2953c623af55ce57b31951771426e9ee544c2f7f06ccb0dc9bdb728058ab4"
+    },
+    {
+      "file": "search-narrow-dark-ja.png",
+      "kind": "primary",
+      "surface": "search",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "dark",
+      "locale": "ja",
+      "bytes": 41662,
+      "sha256": "3fdea7029f9033bdbcdb45fc34d1b987dfa559c97eb0ff1aed752ea5d707b329"
+    },
+    {
+      "file": "search-narrow-light-en.png",
+      "kind": "primary",
+      "surface": "search",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "light",
+      "locale": "en",
+      "bytes": 39005,
+      "sha256": "d89c25a312ebc423ce6297fabdd1c41e663ab32cc29b57da6a55787e84fc236c"
+    },
+    {
+      "file": "search-narrow-light-ja.png",
+      "kind": "primary",
+      "surface": "search",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "light",
+      "locale": "ja",
+      "bytes": 40151,
+      "sha256": "93cae46dd4fc65a49c4363a4bb257cb6be12f35431eedb4068a98646373e0c5f"
+    },
+    {
+      "file": "search-wide-dark-en.png",
+      "kind": "primary",
+      "surface": "search",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "dark",
+      "locale": "en",
+      "bytes": 53931,
+      "sha256": "43fbd7a9b5c5c28257fd4f4491e9c91b2a23896a7eee07e0a72a306202c44095"
+    },
+    {
+      "file": "search-wide-dark-ja.png",
+      "kind": "primary",
+      "surface": "search",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "dark",
+      "locale": "ja",
+      "bytes": 55993,
+      "sha256": "cae3a623c26720ee532ed8ff00a71cc12807435ea58e1638c4a611289491e402"
+    },
+    {
+      "file": "search-wide-light-en.png",
+      "kind": "primary",
+      "surface": "search",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "light",
+      "locale": "en",
+      "bytes": 52105,
+      "sha256": "10e4132ea93ed1dd28e00f50f2678f223b7d4b8645fd52212e06b150e9f01294"
+    },
+    {
+      "file": "search-wide-light-ja.png",
+      "kind": "primary",
+      "surface": "search",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "light",
+      "locale": "ja",
+      "bytes": 53931,
+      "sha256": "a39d8dc88b76473868bdda0696078328414de06b4cf81cc2db6ea4be526f62a3"
+    },
+    {
+      "file": "unavailable-narrow-light-ja.png",
+      "kind": "lifecycle",
+      "state": "unavailable",
+      "width": "narrow",
+      "widthPx": 380,
+      "theme": "light",
+      "locale": "ja",
+      "bytes": 14887,
+      "sha256": "94b8e3e0eef3fe9addb574589b8078f3f5c47429ddb873bf29d864f9c810ef70"
+    },
+    {
+      "file": "unavailable-wide-dark-en.png",
+      "kind": "lifecycle",
+      "state": "unavailable",
+      "width": "wide",
+      "widthPx": 720,
+      "theme": "dark",
+      "locale": "en",
+      "bytes": 12092,
+      "sha256": "dcee3b166e88951c7df1e57961acd789f3a8917f689188a4fb7d67edc78597c9"
+    }
+  ]
+}

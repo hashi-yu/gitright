@@ -1,0 +1,5 @@
+{
+  "name": "@gitright/server",
+  "private": true,
+  "type": "module"
+}

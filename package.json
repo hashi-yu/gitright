@@ -1,0 +1,30 @@
+{
+  "name": "gitright-project",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "plugins/gitright/server",
+    "plugins/gitright/widget"
+  ],
+  "scripts": {
+    "test": "node --test --test-concurrency=1",
+    "test:non-browser": "node test-support/run-non-browser-tests.js",
+    "test:browser": "node --test --test-concurrency=1 test/packaged-app-host.test.js",
+    "test:accessibility": "node --test test/accessibility-localization.test.js",
+    "build:widget": "node plugins/gitright/widget/build.mjs",
+    "build:server": "bun build plugins/gitright/server/index.ts --target=bun --outfile=plugins/gitright/dist/server.js --minify",
+    "build:dist": "npm run build:widget && npm run build:server",
+    "typecheck": "tsc --noEmit",
+    "proof:dist": "docs/proofs/fixtures/bun-distribution/check-dist.sh",
+    "proof:distribution": "docs/proofs/fixtures/bun-distribution/run-package-proof.sh",
+    "proof:git": "docs/proofs/fixtures/git-compatibility/run-proof.sh",
+    "proof:security": "docs/proofs/fixtures/read-only-security/run-proof.sh"
+  },
+  "devDependencies": {
+    "@types/node": "24.3.0",
+    "esbuild": "0.25.9",
+    "playwright-core": "1.61.1",
+    "typescript": "5.9.2"
+  }
+}

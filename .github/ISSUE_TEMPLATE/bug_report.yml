@@ -1,0 +1,64 @@
+name: Bug report
+description: Report a reproducible problem with GitRight.
+title: "bug: "
+labels:
+  - needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Security concerns must use [GitHub private vulnerability reporting](https://github.com/hashi-yu/gitright/security/advisories/new), not a public Issue. For conduct incidents, follow CODE_OF_CONDUCT.md and use GitHub's [Report abuse](https://support.github.com/contact/report-abuse) flow or private vulnerability reporting when private maintainer contact is necessary.
+  - type: checkboxes
+    id: public-report
+    attributes:
+      label: Public-report check
+      options:
+        - label: This report does not disclose a security vulnerability, conduct incident, credential, or private repository content.
+          required: true
+  - type: input
+    id: version
+    attributes:
+      label: GitRight version
+      placeholder: 0.1.0-beta.1
+    validations:
+      required: true
+  - type: dropdown
+    id: architecture
+    attributes:
+      label: Mac architecture
+      options:
+        - arm64
+        - x86_64
+    validations:
+      required: true
+  - type: input
+    id: bun
+    attributes:
+      label: Bun and Git versions
+      description: Include the output of `bun --version` and `git --version`.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest repeatable sequence. Remove private paths, repository content, and host data.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add sanitized logs or product-only captures if they are needed.

@@ -1,0 +1,37 @@
+name: Feature request
+description: Propose a GitRight improvement and explain the user problem.
+title: "feature: "
+labels:
+  - needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature requests are handled on a best-effort basis with no response, acceptance, roadmap, or delivery deadline. Security concerns must use [GitHub private vulnerability reporting](https://github.com/hashi-yu/gitright/security/advisories/new); conduct incidents use GitHub's [Report abuse](https://support.github.com/contact/report-abuse) flow or private vulnerability reporting when private maintainer contact is necessary.
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: What cannot be done clearly or safely with the current behavior?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe the result, not only a preferred implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: contract
+    attributes:
+      label: Product contract
+      options:
+        - label: I understand that material behavior or compatibility changes are discussed in this Issue before implementation.
+          required: true
+        - label: This request contains no security vulnerability, conduct incident, credential, or private repository content.
+          required: true

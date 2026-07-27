@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitRight"
+  short_description: "Open GitRight without shell fallback"
+  default_prompt: "Use $gitright to call only open_gitright; if unavailable, stop without Shell, Git, or repository reads."

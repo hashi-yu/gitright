@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "gitright": {
+      "command": "./dist/launch",
+      "args": [],
+      "cwd": ".",
+      "default_tools_approval_mode": "auto"
+    }
+  }
+}

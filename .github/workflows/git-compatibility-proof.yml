@@ -1,0 +1,51 @@
+name: Git command compatibility proof
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  current-system-git:
+    name: Current macOS system Git
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install test dependencies
+        run: npm ci
+      - name: Run public-seam tests
+        run: npm test
+      - name: Record offline system Git proof
+        run: npm run proof:git -- /usr/bin/git
+
+  minimum-git:
+    name: Minimum Git 2.30.0
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install test dependencies
+        run: npm ci
+      - name: Build the pinned minimum Git
+        run: |
+          BUILD_ROOT="$RUNNER_TEMP/gitright-minimum-git-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          printf 'BUILD_ROOT=%s\n' "$BUILD_ROOT" >> "$GITHUB_ENV"
+          docs/proofs/fixtures/git-compatibility/build-minimum-git.sh "$BUILD_ROOT"
+      - name: Run public-seam tests against the minimum
+        run: GITRIGHT_MINIMUM_GIT="$BUILD_ROOT/install/bin/git" npm test
+      - name: Record offline minimum Git proof
+        run: npm run proof:git -- "$BUILD_ROOT/install/bin/git"

@@ -1,0 +1,66 @@
+# Verification
+
+GitRight keeps user-visible behavior verifiable through tests, reproducible
+fixtures, deterministic distribution checks, and product-only visual evidence.
+
+## Core checks
+
+```sh
+npm run typecheck
+npm test
+```
+
+The test suite covers repository binding, stable and paginated history,
+search, graph and text topology, commit detail, changed files, bounded diffs,
+launcher behavior, explicit conversation handoff, minimal persisted state,
+accessibility, localization, installation, and host integration.
+
+## Distribution
+
+Use Bun 1.3.14 and run:
+
+```sh
+npm run proof:dist
+npm run proof:distribution
+```
+
+The first command rebuilds the widget and server twice and checks that the
+committed payload is byte-identical. The second stages only the installable
+plugin package, exercises the runtime preflight and a representative read-only
+operation, and verifies runtime operation with network access denied.
+
+## Git compatibility
+
+Run the Git proof against an explicit executable:
+
+```sh
+npm run proof:git -- /usr/bin/git
+```
+
+Release verification exercises both Git 2.30.0 and the current macOS system Git.
+The proof covers history, repository state, commit detail, diffs, cancellation,
+and adversarial repository configuration.
+
+## Read-only and offline security
+
+```sh
+npm run proof:security
+```
+
+This proof uses adversarial repositories and runtime network denial. It checks
+that GitRight does not mutate repository or user state, execute hooks, aliases,
+external diff or text-conversion commands, access credentials, make runtime
+network requests, or leave child processes running.
+
+## Visual evidence
+
+The committed visual baseline under
+`docs/proofs/fixtures/visual-baseline/reference/` contains product-only captures
+for launcher, history, search, and diff surfaces at 380 and 720 CSS px, in light
+and dark themes and English and Japanese. Lifecycle cases cover loading, empty,
+unavailable, and error states. Its manifest binds every capture to exact package
+inputs, and the adjacent attestation records human review.
+
+If a package input changes, the baseline must be regenerated and reviewed before
+release. Raw host screenshots, personal environment data, and unrelated host
+state are not public verification evidence.

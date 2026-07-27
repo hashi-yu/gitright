@@ -1,0 +1,20 @@
+{
+  "name": "gitright-beta",
+  "interface": {
+    "displayName": "GitRight Beta"
+  },
+  "plugins": [
+    {
+      "name": "gitright",
+      "source": {
+        "source": "local",
+        "path": "./plugins/gitright"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

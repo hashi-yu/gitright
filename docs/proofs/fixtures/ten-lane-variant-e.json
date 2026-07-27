@@ -1,0 +1,1257 @@
+{
+  "schemaVersion": 1,
+  "description": "Non-production proof fixture reconstructed from reachable Git objects; History order and lanes are derived only from their parent SHAs.",
+  "metrics": {
+    "paneWidth": 380,
+    "railCap": 200,
+    "subjectMinimum": 180,
+    "lanePitch": 18,
+    "lineWidth": 3,
+    "casingWidth": 6,
+    "metricPadding": 10,
+    "rowHeight": 40,
+    "curveStrength": 0.65
+  },
+  "themes": {
+    "light": [
+      "#007aff",
+      "#e8710a",
+      "#007a5e",
+      "#a80052",
+      "#007f8c",
+      "#896200",
+      "#b83222",
+      "#674ea7"
+    ],
+    "dark": [
+      "#0a84ff",
+      "#ff9f0a",
+      "#29c18c",
+      "#f06c9b",
+      "#40c8e0",
+      "#f0d15d",
+      "#ff725c",
+      "#bb9af7"
+    ]
+  },
+  "headId": "head",
+  "historyOrder": [
+    "head",
+    "mainAfterFanOut",
+    "reuseBranch",
+    "fanInMerge",
+    "crissCrossJoin",
+    "crissCrossRight",
+    "crissCrossLeft",
+    "octopusMerge",
+    "ordinaryMerge",
+    "main",
+    "branch9",
+    "branch8",
+    "branch7",
+    "branch6",
+    "branch5",
+    "branch4",
+    "branch3",
+    "branch2",
+    "branch1",
+    "fork",
+    "root"
+  ],
+  "commits": [
+    {
+      "id": "head",
+      "sha": "787dab12358fc05772dd0e8e7cdd5910963e9a37",
+      "subject": "Merge reused lane",
+      "parentIds": [
+        "mainAfterFanOut",
+        "reuseBranch"
+      ],
+      "timestamp": 978307221
+    },
+    {
+      "id": "mainAfterFanOut",
+      "sha": "a392c2c5776d03fffd4a32862def2341db419db5",
+      "subject": "Continue after fan out",
+      "parentIds": [
+        "fanInMerge"
+      ],
+      "timestamp": 978307220
+    },
+    {
+      "id": "reuseBranch",
+      "sha": "8a4e142920cbc0f768fe45e39fc2ea8fe0112223",
+      "subject": "Reuse a released lane",
+      "parentIds": [
+        "fanInMerge"
+      ],
+      "timestamp": 978307219
+    },
+    {
+      "id": "fanInMerge",
+      "sha": "70785cf0a777fb5ef160b11b2606532dc2785d3f",
+      "subject": "Fan in remaining branches",
+      "parentIds": [
+        "crissCrossJoin",
+        "branch7",
+        "branch8",
+        "branch9"
+      ],
+      "timestamp": 978307218
+    },
+    {
+      "id": "crissCrossJoin",
+      "sha": "69836a4438465f898df1a31094abd81a66db9551",
+      "subject": "Join criss-cross pair",
+      "parentIds": [
+        "octopusMerge",
+        "crissCrossLeft",
+        "crissCrossRight"
+      ],
+      "timestamp": 978307217
+    },
+    {
+      "id": "crissCrossRight",
+      "sha": "d79b93927562414f10b8139fcfe36f8f2b8a5faa",
+      "subject": "Criss-cross right",
+      "parentIds": [
+        "branch6",
+        "branch5"
+      ],
+      "timestamp": 978307216
+    },
+    {
+      "id": "crissCrossLeft",
+      "sha": "d7630019412467494abef88ba10d74ce16981831",
+      "subject": "Criss-cross left",
+      "parentIds": [
+        "branch5",
+        "branch6"
+      ],
+      "timestamp": 978307215
+    },
+    {
+      "id": "octopusMerge",
+      "sha": "cbb66bad8f02fec319fc87a26deee06694b9febc",
+      "subject": "Four-parent octopus",
+      "parentIds": [
+        "ordinaryMerge",
+        "branch2",
+        "branch3",
+        "branch4"
+      ],
+      "timestamp": 978307214
+    },
+    {
+      "id": "ordinaryMerge",
+      "sha": "ac3ccda495d709ba60be0e62093d730cab702520",
+      "subject": "Ordinary merge",
+      "parentIds": [
+        "main",
+        "branch1"
+      ],
+      "timestamp": 978307213
+    },
+    {
+      "id": "main",
+      "sha": "600031dea873b273df80311967882ec29b53baba",
+      "subject": "HEAD first-parent track",
+      "parentIds": [
+        "fork"
+      ],
+      "timestamp": 978307212
+    },
+    {
+      "id": "branch9",
+      "sha": "abfe651af778a69d44b7d51d1876395b9c4cb309",
+      "subject": "Concurrent branch 9",
+      "parentIds": [
+        "fork"
+      ],
+      "timestamp": 978307211
+    },
+    {
+      "id": "branch8",
+      "sha": "a5cb116ed1a81d67758ef612595f52ce9584e6e3",
+      "subject": "Concurrent branch 8",
+      "parentIds": [
+        "fork"
+      ],
+      "timestamp": 978307210
+    },
+    {
+      "id": "branch7",
+      "sha": "f934a968c86a94889d2b49570ae8d9b89fed20b3",
+      "subject": "Concurrent branch 7",
+      "parentIds": [
+        "fork"
+      ],
+      "timestamp": 978307209
+    },
+    {
+      "id": "branch6",
+      "sha": "3ca2334d75df1f3b2ac806b345454c91401f6622",
+      "subject": "Concurrent branch 6",
+      "parentIds": [
+        "fork"
+      ],
+      "timestamp": 978307208
+    },
+    {
+      "id": "branch5",
+      "sha": "3d7f461cbb3a71ebe59656b3f923a2041da3dd4d",
+      "subject": "Concurrent branch 5",
+      "parentIds": [
+        "fork"
+      ],
+      "timestamp": 978307207
+    },
+    {
+      "id": "branch4",
+      "sha": "4d6f8a97f41a69731fc9e780295256163b68bb6b",
+      "subject": "Concurrent branch 4",
+      "parentIds": [
+        "fork"
+      ],
+      "timestamp": 978307206
+    },
+    {
+      "id": "branch3",
+      "sha": "763b5693f56fd9585189488985ee12324c0be6c7",
+      "subject": "Concurrent branch 3",
+      "parentIds": [
+        "fork"
+      ],
+      "timestamp": 978307205
+    },
+    {
+      "id": "branch2",
+      "sha": "2711a08ef42e212fe49bf08fbbd0f1f355cd8c93",
+      "subject": "Concurrent branch 2",
+      "parentIds": [
+        "fork"
+      ],
+      "timestamp": 978307204
+    },
+    {
+      "id": "branch1",
+      "sha": "90a11317f200712bf9ae2f772b5c48d84f255663",
+      "subject": "Concurrent branch 1",
+      "parentIds": [
+        "fork"
+      ],
+      "timestamp": 978307203
+    },
+    {
+      "id": "fork",
+      "sha": "638b0e4fd6761422159c55714af07a97e5811f73",
+      "subject": "Fan out ten live tracks",
+      "parentIds": [
+        "root"
+      ],
+      "timestamp": 978307202
+    },
+    {
+      "id": "root",
+      "sha": "521f54651ac98b851e8bee2986530b4d15415028",
+      "subject": "Root",
+      "parentIds": [],
+      "timestamp": 978307201
+    }
+  ],
+  "layout": {
+    "rows": [
+      {
+        "rowIndex": 0,
+        "sha": "787dab12358fc05772dd0e8e7cdd5910963e9a37",
+        "lane": 0,
+        "continuesFromAbove": false,
+        "activeBefore": [
+          "head"
+        ],
+        "activeAfter": [
+          "mainAfterFanOut",
+          "reuseBranch"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 0,
+            "parentLane": 0,
+            "parentAlreadyActive": false,
+            "trackLane": 0,
+            "curveStrength": 0.65,
+            "fanOffset": -1,
+            "childId": "head",
+            "parentId": "mainAfterFanOut"
+          },
+          {
+            "parentIndex": 1,
+            "childLane": 0,
+            "parentLane": 1,
+            "parentAlreadyActive": false,
+            "trackLane": 1,
+            "curveStrength": 0.65,
+            "fanOffset": 1,
+            "childId": "head",
+            "parentId": "reuseBranch"
+          }
+        ],
+        "id": "head"
+      },
+      {
+        "rowIndex": 1,
+        "sha": "a392c2c5776d03fffd4a32862def2341db419db5",
+        "lane": 0,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "mainAfterFanOut",
+          "reuseBranch"
+        ],
+        "activeAfter": [
+          "fanInMerge",
+          "reuseBranch"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 0,
+            "parentLane": 0,
+            "parentAlreadyActive": false,
+            "trackLane": 0,
+            "curveStrength": 0.65,
+            "fanOffset": 0,
+            "childId": "mainAfterFanOut",
+            "parentId": "fanInMerge"
+          }
+        ],
+        "id": "mainAfterFanOut"
+      },
+      {
+        "rowIndex": 2,
+        "sha": "8a4e142920cbc0f768fe45e39fc2ea8fe0112223",
+        "lane": 1,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "fanInMerge",
+          "reuseBranch"
+        ],
+        "activeAfter": [
+          "fanInMerge",
+          "fanInMerge"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 1,
+            "parentLane": 1,
+            "parentAlreadyActive": true,
+            "trackLane": 1,
+            "curveStrength": 0.65,
+            "fanOffset": 0,
+            "childId": "reuseBranch",
+            "parentId": "fanInMerge"
+          }
+        ],
+        "id": "reuseBranch"
+      },
+      {
+        "rowIndex": 3,
+        "sha": "70785cf0a777fb5ef160b11b2606532dc2785d3f",
+        "lane": 0,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "fanInMerge",
+          "fanInMerge"
+        ],
+        "activeAfter": [
+          "crissCrossJoin",
+          "branch7",
+          "branch8",
+          "branch9"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 0,
+            "parentLane": 0,
+            "parentAlreadyActive": false,
+            "trackLane": 0,
+            "curveStrength": 0.65,
+            "fanOffset": -3,
+            "childId": "fanInMerge",
+            "parentId": "crissCrossJoin"
+          },
+          {
+            "parentIndex": 1,
+            "childLane": 0,
+            "parentLane": 1,
+            "parentAlreadyActive": false,
+            "trackLane": 1,
+            "curveStrength": 0.65,
+            "fanOffset": -1,
+            "childId": "fanInMerge",
+            "parentId": "branch7"
+          },
+          {
+            "parentIndex": 2,
+            "childLane": 0,
+            "parentLane": 2,
+            "parentAlreadyActive": false,
+            "trackLane": 2,
+            "curveStrength": 0.65,
+            "fanOffset": 1,
+            "childId": "fanInMerge",
+            "parentId": "branch8"
+          },
+          {
+            "parentIndex": 3,
+            "childLane": 0,
+            "parentLane": 3,
+            "parentAlreadyActive": false,
+            "trackLane": 3,
+            "curveStrength": 0.65,
+            "fanOffset": 3,
+            "childId": "fanInMerge",
+            "parentId": "branch9"
+          }
+        ],
+        "id": "fanInMerge"
+      },
+      {
+        "rowIndex": 4,
+        "sha": "69836a4438465f898df1a31094abd81a66db9551",
+        "lane": 0,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "crissCrossJoin",
+          "branch7",
+          "branch8",
+          "branch9"
+        ],
+        "activeAfter": [
+          "octopusMerge",
+          "branch7",
+          "branch8",
+          "branch9",
+          "crissCrossLeft",
+          "crissCrossRight"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 0,
+            "parentLane": 0,
+            "parentAlreadyActive": false,
+            "trackLane": 0,
+            "curveStrength": 0.65,
+            "fanOffset": -2,
+            "childId": "crissCrossJoin",
+            "parentId": "octopusMerge"
+          },
+          {
+            "parentIndex": 1,
+            "childLane": 0,
+            "parentLane": 4,
+            "parentAlreadyActive": false,
+            "trackLane": 4,
+            "curveStrength": 0.65,
+            "fanOffset": 0,
+            "childId": "crissCrossJoin",
+            "parentId": "crissCrossLeft"
+          },
+          {
+            "parentIndex": 2,
+            "childLane": 0,
+            "parentLane": 5,
+            "parentAlreadyActive": false,
+            "trackLane": 5,
+            "curveStrength": 0.65,
+            "fanOffset": 2,
+            "childId": "crissCrossJoin",
+            "parentId": "crissCrossRight"
+          }
+        ],
+        "id": "crissCrossJoin"
+      },
+      {
+        "rowIndex": 5,
+        "sha": "d79b93927562414f10b8139fcfe36f8f2b8a5faa",
+        "lane": 5,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "octopusMerge",
+          "branch7",
+          "branch8",
+          "branch9",
+          "crissCrossLeft",
+          "crissCrossRight"
+        ],
+        "activeAfter": [
+          "octopusMerge",
+          "branch7",
+          "branch8",
+          "branch9",
+          "crissCrossLeft",
+          "branch6",
+          "branch5"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 5,
+            "parentLane": 5,
+            "parentAlreadyActive": false,
+            "trackLane": 5,
+            "curveStrength": 0.65,
+            "fanOffset": -1,
+            "childId": "crissCrossRight",
+            "parentId": "branch6"
+          },
+          {
+            "parentIndex": 1,
+            "childLane": 5,
+            "parentLane": 6,
+            "parentAlreadyActive": false,
+            "trackLane": 6,
+            "curveStrength": 0.65,
+            "fanOffset": 1,
+            "childId": "crissCrossRight",
+            "parentId": "branch5"
+          }
+        ],
+        "id": "crissCrossRight"
+      },
+      {
+        "rowIndex": 6,
+        "sha": "d7630019412467494abef88ba10d74ce16981831",
+        "lane": 4,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "octopusMerge",
+          "branch7",
+          "branch8",
+          "branch9",
+          "crissCrossLeft",
+          "branch6",
+          "branch5"
+        ],
+        "activeAfter": [
+          "octopusMerge",
+          "branch7",
+          "branch8",
+          "branch9",
+          "branch5",
+          "branch6",
+          "branch5"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 4,
+            "parentLane": 4,
+            "parentAlreadyActive": true,
+            "trackLane": 4,
+            "curveStrength": 0.65,
+            "fanOffset": -1,
+            "childId": "crissCrossLeft",
+            "parentId": "branch5"
+          },
+          {
+            "parentIndex": 1,
+            "childLane": 4,
+            "parentLane": 5,
+            "parentAlreadyActive": true,
+            "trackLane": 5,
+            "curveStrength": 0.65,
+            "fanOffset": 1,
+            "childId": "crissCrossLeft",
+            "parentId": "branch6"
+          }
+        ],
+        "id": "crissCrossLeft"
+      },
+      {
+        "rowIndex": 7,
+        "sha": "cbb66bad8f02fec319fc87a26deee06694b9febc",
+        "lane": 0,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "octopusMerge",
+          "branch7",
+          "branch8",
+          "branch9",
+          "branch5",
+          "branch6",
+          "branch5"
+        ],
+        "activeAfter": [
+          "ordinaryMerge",
+          "branch7",
+          "branch8",
+          "branch9",
+          "branch5",
+          "branch6",
+          "branch5",
+          "branch2",
+          "branch3",
+          "branch4"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 0,
+            "parentLane": 0,
+            "parentAlreadyActive": false,
+            "trackLane": 0,
+            "curveStrength": 0.65,
+            "fanOffset": -3,
+            "childId": "octopusMerge",
+            "parentId": "ordinaryMerge"
+          },
+          {
+            "parentIndex": 1,
+            "childLane": 0,
+            "parentLane": 7,
+            "parentAlreadyActive": false,
+            "trackLane": 7,
+            "curveStrength": 0.65,
+            "fanOffset": -1,
+            "childId": "octopusMerge",
+            "parentId": "branch2"
+          },
+          {
+            "parentIndex": 2,
+            "childLane": 0,
+            "parentLane": 8,
+            "parentAlreadyActive": false,
+            "trackLane": 8,
+            "curveStrength": 0.65,
+            "fanOffset": 1,
+            "childId": "octopusMerge",
+            "parentId": "branch3"
+          },
+          {
+            "parentIndex": 3,
+            "childLane": 0,
+            "parentLane": 9,
+            "parentAlreadyActive": false,
+            "trackLane": 9,
+            "curveStrength": 0.65,
+            "fanOffset": 3,
+            "childId": "octopusMerge",
+            "parentId": "branch4"
+          }
+        ],
+        "id": "octopusMerge"
+      },
+      {
+        "rowIndex": 8,
+        "sha": "ac3ccda495d709ba60be0e62093d730cab702520",
+        "lane": 0,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "ordinaryMerge",
+          "branch7",
+          "branch8",
+          "branch9",
+          "branch5",
+          "branch6",
+          "branch5",
+          "branch2",
+          "branch3",
+          "branch4"
+        ],
+        "activeAfter": [
+          "main",
+          "branch7",
+          "branch8",
+          "branch9",
+          "branch5",
+          "branch6",
+          "branch5",
+          "branch2",
+          "branch3",
+          "branch4",
+          "branch1"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 0,
+            "parentLane": 0,
+            "parentAlreadyActive": false,
+            "trackLane": 0,
+            "curveStrength": 0.65,
+            "fanOffset": -1,
+            "childId": "ordinaryMerge",
+            "parentId": "main"
+          },
+          {
+            "parentIndex": 1,
+            "childLane": 0,
+            "parentLane": 10,
+            "parentAlreadyActive": false,
+            "trackLane": 10,
+            "curveStrength": 0.65,
+            "fanOffset": 1,
+            "childId": "ordinaryMerge",
+            "parentId": "branch1"
+          }
+        ],
+        "id": "ordinaryMerge"
+      },
+      {
+        "rowIndex": 9,
+        "sha": "600031dea873b273df80311967882ec29b53baba",
+        "lane": 0,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "main",
+          "branch7",
+          "branch8",
+          "branch9",
+          "branch5",
+          "branch6",
+          "branch5",
+          "branch2",
+          "branch3",
+          "branch4",
+          "branch1"
+        ],
+        "activeAfter": [
+          "fork",
+          "branch7",
+          "branch8",
+          "branch9",
+          "branch5",
+          "branch6",
+          "branch5",
+          "branch2",
+          "branch3",
+          "branch4",
+          "branch1"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 0,
+            "parentLane": 0,
+            "parentAlreadyActive": false,
+            "trackLane": 0,
+            "curveStrength": 0.65,
+            "fanOffset": 0,
+            "childId": "main",
+            "parentId": "fork"
+          }
+        ],
+        "id": "main"
+      },
+      {
+        "rowIndex": 10,
+        "sha": "abfe651af778a69d44b7d51d1876395b9c4cb309",
+        "lane": 3,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "fork",
+          "branch7",
+          "branch8",
+          "branch9",
+          "branch5",
+          "branch6",
+          "branch5",
+          "branch2",
+          "branch3",
+          "branch4",
+          "branch1"
+        ],
+        "activeAfter": [
+          "fork",
+          "branch7",
+          "branch8",
+          "fork",
+          "branch5",
+          "branch6",
+          "branch5",
+          "branch2",
+          "branch3",
+          "branch4",
+          "branch1"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 3,
+            "parentLane": 3,
+            "parentAlreadyActive": true,
+            "trackLane": 3,
+            "curveStrength": 0.65,
+            "fanOffset": 0,
+            "childId": "branch9",
+            "parentId": "fork"
+          }
+        ],
+        "id": "branch9"
+      },
+      {
+        "rowIndex": 11,
+        "sha": "a5cb116ed1a81d67758ef612595f52ce9584e6e3",
+        "lane": 2,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "fork",
+          "branch7",
+          "branch8",
+          "fork",
+          "branch5",
+          "branch6",
+          "branch5",
+          "branch2",
+          "branch3",
+          "branch4",
+          "branch1"
+        ],
+        "activeAfter": [
+          "fork",
+          "branch7",
+          "fork",
+          "fork",
+          "branch5",
+          "branch6",
+          "branch5",
+          "branch2",
+          "branch3",
+          "branch4",
+          "branch1"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 2,
+            "parentLane": 2,
+            "parentAlreadyActive": true,
+            "trackLane": 2,
+            "curveStrength": 0.65,
+            "fanOffset": 0,
+            "childId": "branch8",
+            "parentId": "fork"
+          }
+        ],
+        "id": "branch8"
+      },
+      {
+        "rowIndex": 12,
+        "sha": "f934a968c86a94889d2b49570ae8d9b89fed20b3",
+        "lane": 1,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "fork",
+          "branch7",
+          "fork",
+          "fork",
+          "branch5",
+          "branch6",
+          "branch5",
+          "branch2",
+          "branch3",
+          "branch4",
+          "branch1"
+        ],
+        "activeAfter": [
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "branch5",
+          "branch6",
+          "branch5",
+          "branch2",
+          "branch3",
+          "branch4",
+          "branch1"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 1,
+            "parentLane": 1,
+            "parentAlreadyActive": true,
+            "trackLane": 1,
+            "curveStrength": 0.65,
+            "fanOffset": 0,
+            "childId": "branch7",
+            "parentId": "fork"
+          }
+        ],
+        "id": "branch7"
+      },
+      {
+        "rowIndex": 13,
+        "sha": "3ca2334d75df1f3b2ac806b345454c91401f6622",
+        "lane": 5,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "branch5",
+          "branch6",
+          "branch5",
+          "branch2",
+          "branch3",
+          "branch4",
+          "branch1"
+        ],
+        "activeAfter": [
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "branch5",
+          "fork",
+          "branch5",
+          "branch2",
+          "branch3",
+          "branch4",
+          "branch1"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 5,
+            "parentLane": 5,
+            "parentAlreadyActive": true,
+            "trackLane": 5,
+            "curveStrength": 0.65,
+            "fanOffset": 0,
+            "childId": "branch6",
+            "parentId": "fork"
+          }
+        ],
+        "id": "branch6"
+      },
+      {
+        "rowIndex": 14,
+        "sha": "3d7f461cbb3a71ebe59656b3f923a2041da3dd4d",
+        "lane": 4,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "branch5",
+          "fork",
+          "branch5",
+          "branch2",
+          "branch3",
+          "branch4",
+          "branch1"
+        ],
+        "activeAfter": [
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          null,
+          "branch2",
+          "branch3",
+          "branch4",
+          "branch1"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 4,
+            "parentLane": 4,
+            "parentAlreadyActive": true,
+            "trackLane": 4,
+            "curveStrength": 0.65,
+            "fanOffset": 0,
+            "childId": "branch5",
+            "parentId": "fork"
+          }
+        ],
+        "id": "branch5"
+      },
+      {
+        "rowIndex": 15,
+        "sha": "4d6f8a97f41a69731fc9e780295256163b68bb6b",
+        "lane": 9,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          null,
+          "branch2",
+          "branch3",
+          "branch4",
+          "branch1"
+        ],
+        "activeAfter": [
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          null,
+          "branch2",
+          "branch3",
+          "fork",
+          "branch1"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 9,
+            "parentLane": 9,
+            "parentAlreadyActive": true,
+            "trackLane": 9,
+            "curveStrength": 0.65,
+            "fanOffset": 0,
+            "childId": "branch4",
+            "parentId": "fork"
+          }
+        ],
+        "id": "branch4"
+      },
+      {
+        "rowIndex": 16,
+        "sha": "763b5693f56fd9585189488985ee12324c0be6c7",
+        "lane": 8,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          null,
+          "branch2",
+          "branch3",
+          "fork",
+          "branch1"
+        ],
+        "activeAfter": [
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          null,
+          "branch2",
+          "fork",
+          "fork",
+          "branch1"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 8,
+            "parentLane": 8,
+            "parentAlreadyActive": true,
+            "trackLane": 8,
+            "curveStrength": 0.65,
+            "fanOffset": 0,
+            "childId": "branch3",
+            "parentId": "fork"
+          }
+        ],
+        "id": "branch3"
+      },
+      {
+        "rowIndex": 17,
+        "sha": "2711a08ef42e212fe49bf08fbbd0f1f355cd8c93",
+        "lane": 7,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          null,
+          "branch2",
+          "fork",
+          "fork",
+          "branch1"
+        ],
+        "activeAfter": [
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          null,
+          "fork",
+          "fork",
+          "fork",
+          "branch1"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 7,
+            "parentLane": 7,
+            "parentAlreadyActive": true,
+            "trackLane": 7,
+            "curveStrength": 0.65,
+            "fanOffset": 0,
+            "childId": "branch2",
+            "parentId": "fork"
+          }
+        ],
+        "id": "branch2"
+      },
+      {
+        "rowIndex": 18,
+        "sha": "90a11317f200712bf9ae2f772b5c48d84f255663",
+        "lane": 10,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          null,
+          "fork",
+          "fork",
+          "fork",
+          "branch1"
+        ],
+        "activeAfter": [
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          null,
+          "fork",
+          "fork",
+          "fork",
+          "fork"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 10,
+            "parentLane": 10,
+            "parentAlreadyActive": true,
+            "trackLane": 10,
+            "curveStrength": 0.65,
+            "fanOffset": 0,
+            "childId": "branch1",
+            "parentId": "fork"
+          }
+        ],
+        "id": "branch1"
+      },
+      {
+        "rowIndex": 19,
+        "sha": "638b0e4fd6761422159c55714af07a97e5811f73",
+        "lane": 0,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          "fork",
+          null,
+          "fork",
+          "fork",
+          "fork",
+          "fork"
+        ],
+        "activeAfter": [
+          "root"
+        ],
+        "routes": [
+          {
+            "parentIndex": 0,
+            "childLane": 0,
+            "parentLane": 0,
+            "parentAlreadyActive": false,
+            "trackLane": 0,
+            "curveStrength": 0.65,
+            "fanOffset": 0,
+            "childId": "fork",
+            "parentId": "root"
+          }
+        ],
+        "id": "fork"
+      },
+      {
+        "rowIndex": 20,
+        "sha": "521f54651ac98b851e8bee2986530b4d15415028",
+        "lane": 0,
+        "continuesFromAbove": true,
+        "activeBefore": [
+          "root"
+        ],
+        "activeAfter": [],
+        "routes": [],
+        "id": "root"
+      }
+    ],
+    "maximumOccupiedLaneCount": 11,
+    "maximumLaneIndex": 10,
+    "laneCount": 11,
+    "graphWidth": 200,
+    "openLanes": []
+  },
+  "invariants": {
+    "historyOrder": true,
+    "gitObjectGraph": true,
+    "maximumSimultaneousLanes": 11,
+    "maximumDistinctDagPaths": 10,
+    "laneCount": 11,
+    "peakRow": "main",
+    "peakLaneOccupants": [
+      "main",
+      "branch7",
+      "branch8",
+      "branch9",
+      "branch5",
+      "branch6",
+      "branch5",
+      "branch2",
+      "branch3",
+      "branch4",
+      "branch1"
+    ],
+    "ordinaryMerge": "ordinaryMerge",
+    "octopusParentCount": 4,
+    "fanOutChildCount": 10,
+    "fanInParentCount": 4,
+    "crissCrossPair": [
+      "crissCrossLeft",
+      "crissCrossRight"
+    ],
+    "laneReuse": {
+      "lane": 1,
+      "first": "reuseBranch",
+      "reusedBy": "branch7"
+    },
+    "directParentConnections": 32,
+    "graphWidth": 200,
+    "subjectWidth": 180,
+    "horizontalGraphOverflow": false
+  }
+}
