@@ -356,7 +356,7 @@ test("architecture-neutral plugin package initializes without a source install",
     result: {
       protocolVersion: "2025-06-18",
       capabilities: { tools: {}, resources: {} },
-      serverInfo: { name: "gitright", version: "0.1.0-beta.1" },
+      serverInfo: { name: "gitright", version: "0.1.0-beta.2" },
     },
   });
 });
