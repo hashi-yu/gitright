@@ -8,8 +8,42 @@ NEXT_BUN_MAJOR=2
 VERSION_TOO_OLD=2
 VERSION_UNSUPPORTED_MAJOR=3
 VERSION_UNRECOGNIZED=4
+VERSION_PROBE_TIMEOUT_SECONDS=5
 SUPPORTED_BUN_RANGE=">=$MINIMUM_BUN_MAJOR.$MINIMUM_BUN_MINOR.$MINIMUM_BUN_PATCH <$NEXT_BUN_MAJOR.0.0"
 SCRIPT_DIR=$(CDPATH= cd -- "${0%/*}" && pwd)
+VERSION_PROBE_PID=
+VERSION_WATCHDOG_PID=
+VERSION_PROBE_DIRECTORY=
+
+cleanup_version_probe() {
+  if [ -n "$VERSION_WATCHDOG_PID" ]; then
+    kill -TERM "$VERSION_WATCHDOG_PID" 2>/dev/null || :
+    wait "$VERSION_WATCHDOG_PID" 2>/dev/null || :
+    VERSION_WATCHDOG_PID=
+  fi
+  if [ -n "$VERSION_PROBE_PID" ]; then
+    kill -KILL "$VERSION_PROBE_PID" 2>/dev/null || :
+    wait "$VERSION_PROBE_PID" 2>/dev/null || :
+    VERSION_PROBE_PID=
+  fi
+  if [ -n "$VERSION_PROBE_DIRECTORY" ]; then
+    /bin/rm -f \
+      "$VERSION_PROBE_DIRECTORY/version" \
+      "$VERSION_PROBE_DIRECTORY/timed-out" 2>/dev/null || :
+    /bin/rmdir "$VERSION_PROBE_DIRECTORY" 2>/dev/null || :
+    VERSION_PROBE_DIRECTORY=
+  fi
+}
+
+terminate_preflight() {
+  cleanup_version_probe
+  exit 143
+}
+
+interrupt_preflight() {
+  cleanup_version_probe
+  exit 130
+}
 
 find_bun() {
   if command -v bun >/dev/null 2>&1; then
@@ -65,12 +99,75 @@ if ! BUN_BIN=$(find_bun); then
   exit 127
 fi
 
-if ! BUN_VERSION=$("$BUN_BIN" --version 2>/dev/null); then
+if ! VERSION_PROBE_DIRECTORY=$(
+  /usr/bin/mktemp -d "${TMPDIR:-/tmp}/gitright-bun-version.XXXXXX" 2>/dev/null
+); then
+  printf '%s\n' \
+    "GitRight found Bun but could not prepare its bounded version check. Required range: $SUPPORTED_BUN_RANGE." \
+    "GitRight did not change your environment." >&2
+  exit 78
+fi
+
+trap terminate_preflight TERM
+trap interrupt_preflight INT
+
+"$BUN_BIN" --version > "$VERSION_PROBE_DIRECTORY/version" 2>/dev/null &
+VERSION_PROBE_PID=$!
+(
+  timer_pid=
+  stop_watchdog() {
+    if [ -n "$timer_pid" ]; then
+      kill -TERM "$timer_pid" 2>/dev/null || :
+      wait "$timer_pid" 2>/dev/null || :
+    fi
+    exit 0
+  }
+  trap stop_watchdog TERM INT
+
+  /bin/sleep "$VERSION_PROBE_TIMEOUT_SECONDS" &
+  timer_pid=$!
+  if wait "$timer_pid" 2>/dev/null; then
+    timer_pid=
+    if kill -0 "$VERSION_PROBE_PID" 2>/dev/null; then
+      : > "$VERSION_PROBE_DIRECTORY/timed-out"
+      kill -KILL "$VERSION_PROBE_PID" 2>/dev/null || :
+    fi
+  fi
+) &
+VERSION_WATCHDOG_PID=$!
+
+if wait "$VERSION_PROBE_PID" 2>/dev/null; then
+  version_probe_status=0
+else
+  version_probe_status=$?
+fi
+VERSION_PROBE_PID=
+
+kill -TERM "$VERSION_WATCHDOG_PID" 2>/dev/null || :
+wait "$VERSION_WATCHDOG_PID" 2>/dev/null || :
+VERSION_WATCHDOG_PID=
+
+if [ -f "$VERSION_PROBE_DIRECTORY/timed-out" ]; then
+  cleanup_version_probe
+  trap - TERM INT
+  printf '%s\n' \
+    "GitRight found Bun but its version check timed out after $VERSION_PROBE_TIMEOUT_SECONDS seconds. Required range: $SUPPORTED_BUN_RANGE." \
+    "GitRight did not change your environment." >&2
+  exit 78
+fi
+
+if [ "$version_probe_status" -ne 0 ]; then
+  cleanup_version_probe
+  trap - TERM INT
   printf '%s\n' \
     "GitRight found Bun but could not read its version. Required range: $SUPPORTED_BUN_RANGE." \
     "GitRight did not change your environment." >&2
   exit 78
 fi
+
+BUN_VERSION=$(/bin/cat "$VERSION_PROBE_DIRECTORY/version")
+cleanup_version_probe
+trap - TERM INT
 
 if version_status "$BUN_VERSION"; then
   :

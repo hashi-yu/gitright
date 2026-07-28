@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -50,6 +50,95 @@ async function fakeBun(directory, version) {
     { mode: 0o755 },
   );
   return executable;
+}
+
+async function hangingFakeBun(directory) {
+  await mkdir(directory, { recursive: true });
+  const executable = path.join(directory, "bun");
+  await writeFile(
+    executable,
+    `#!/bin/sh
+if [ "\${1-}" = "--version" ]; then
+  printf '%s\\n' "$$" > "$GITRIGHT_FAKE_BUN_PID_FILE"
+  exec /bin/sleep 60
+fi
+exit 64
+`,
+    { mode: 0o755 },
+  );
+  return executable;
+}
+
+async function waitForProbePid(pidFile) {
+  const deadline = Date.now() + 2_000;
+  while (Date.now() < deadline) {
+    try {
+      const pid = Number.parseInt(await readFile(pidFile, "utf8"), 10);
+      if (Number.isInteger(pid) && pid > 0) return pid;
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error("timed out waiting for the fake Bun version probe");
+}
+
+async function waitForExit(child, timeoutMs) {
+  return await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error(`launcher did not exit within ${timeoutMs}ms`));
+    }, timeoutMs);
+    child.once("exit", (code, signal) => {
+      clearTimeout(timeout);
+      resolve({ code, signal });
+    });
+  });
+}
+
+function processIsRunning(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    if (error.code === "ESRCH") return false;
+    throw error;
+  }
+}
+
+async function startHangingPreflight(t) {
+  const root = await mkdtemp(path.join(tmpdir(), "gitright-hanging-preflight-"));
+  const bin = path.join(root, "bin");
+  const pidFile = path.join(root, "probe.pid");
+  await hangingFakeBun(bin);
+  const child = spawn(launcher, [], {
+    cwd: repositoryRoot,
+    env: {
+      HOME: path.join(root, "home"),
+      PATH: `${bin}:/usr/bin:/bin`,
+      GITRIGHT_FAKE_BUN_PID_FILE: pidFile,
+    },
+  });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.on("data", (chunk) => {
+    stdout += chunk;
+  });
+  child.stderr.on("data", (chunk) => {
+    stderr += chunk;
+  });
+  const probePid = await waitForProbePid(pidFile);
+
+  t.after(async () => {
+    if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+    if (processIsRunning(probePid)) process.kill(probePid, "SIGKILL");
+    await rm(root, { recursive: true, force: true });
+  });
+
+  return {
+    child,
+    probePid,
+    output: () => ({ stdout, stderr }),
+  };
 }
 
 async function runPreflightWithPathBun(version, args = []) {
@@ -160,6 +249,34 @@ test("runtime preflight does not echo unrecognized version output", async () => 
   assert.match(result.stderr, /Bun reported an unrecognized version/);
   assert.doesNotMatch(result.stderr, /SECRET_SENTINEL/);
 });
+
+test("runtime preflight times out and reaps a hanging Bun version probe", async (t) => {
+  const fixture = await startHangingPreflight(t);
+  const result = await waitForExit(fixture.child, 7_000);
+
+  assert.equal(result.code, 78);
+  assert.equal(result.signal, null);
+  assert.equal(fixture.output().stdout, "");
+  assert.match(fixture.output().stderr, /version check timed out after 5 seconds/);
+  assert.match(fixture.output().stderr, /did not change your environment/);
+  assert.equal(processIsRunning(fixture.probePid), false);
+});
+
+for (const [signal, expectedCode] of [["SIGTERM", 143], ["SIGINT", 130]]) {
+  test(`runtime preflight ${signal} reaps a pending Bun version probe`, async (t) => {
+    const fixture = await startHangingPreflight(t);
+    const exited = waitForExit(fixture.child, 2_000);
+
+    fixture.child.kill(signal);
+    const result = await exited;
+
+    assert.equal(result.code, expectedCode);
+    assert.equal(result.signal, null);
+    assert.equal(fixture.output().stdout, "");
+    assert.equal(fixture.output().stderr, "");
+    assert.equal(processIsRunning(fixture.probePid), false);
+  });
+}
 
 test("runtime preflight finds Bun in the standard user installation path", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "gitright preflight "));
