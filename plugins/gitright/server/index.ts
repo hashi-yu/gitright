@@ -22,7 +22,7 @@ declare const Bun: { version: string };
 
 const serverInfo = {
   name: "gitright",
-  version: "0.1.0-beta.1",
+  version: "0.1.0-beta.2",
 };
 
 const widgetUri = "ui://gitright/repository-state-v2.html";

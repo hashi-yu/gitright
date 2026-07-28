@@ -1,6 +1,6 @@
 {
   "name": "gitright",
-  "version": "0.1.0-beta.1+codex.20260718121412",
+  "version": "0.1.0-beta.2+codex.20260728152014",
   "description": "Read-only Git history for Codex",
   "author": {
     "name": "hashi-yu",
