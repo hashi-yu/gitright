@@ -1,0 +1,187 @@
+#!/bin/sh
+set -efu
+
+MINIMUM_BUN_MAJOR=1
+MINIMUM_BUN_MINOR=3
+MINIMUM_BUN_PATCH=14
+NEXT_BUN_MAJOR=2
+VERSION_TOO_OLD=2
+VERSION_UNSUPPORTED_MAJOR=3
+VERSION_UNRECOGNIZED=4
+VERSION_PROBE_TIMEOUT_SECONDS=5
+SUPPORTED_BUN_RANGE=">=$MINIMUM_BUN_MAJOR.$MINIMUM_BUN_MINOR.$MINIMUM_BUN_PATCH <$NEXT_BUN_MAJOR.0.0"
+SCRIPT_DIR=$(CDPATH= cd -- "${0%/*}" && pwd)
+VERSION_PROBE_PID=
+VERSION_WATCHDOG_PID=
+VERSION_PROBE_DIRECTORY=
+
+cleanup_version_probe() {
+  if [ -n "$VERSION_WATCHDOG_PID" ]; then
+    kill -TERM "$VERSION_WATCHDOG_PID" 2>/dev/null || :
+    wait "$VERSION_WATCHDOG_PID" 2>/dev/null || :
+    VERSION_WATCHDOG_PID=
+  fi
+  if [ -n "$VERSION_PROBE_PID" ]; then
+    kill -KILL "$VERSION_PROBE_PID" 2>/dev/null || :
+    wait "$VERSION_PROBE_PID" 2>/dev/null || :
+    VERSION_PROBE_PID=
+  fi
+  if [ -n "$VERSION_PROBE_DIRECTORY" ]; then
+    /bin/rm -f \
+      "$VERSION_PROBE_DIRECTORY/version" \
+      "$VERSION_PROBE_DIRECTORY/timed-out" 2>/dev/null || :
+    /bin/rmdir "$VERSION_PROBE_DIRECTORY" 2>/dev/null || :
+    VERSION_PROBE_DIRECTORY=
+  fi
+}
+
+terminate_preflight() {
+  cleanup_version_probe
+  exit 143
+}
+
+interrupt_preflight() {
+  cleanup_version_probe
+  exit 130
+}
+
+find_bun() {
+  if command -v bun >/dev/null 2>&1; then
+    command -v bun
+    return 0
+  fi
+
+  for candidate in \
+    "${HOME:-}/.bun/bin/bun" \
+    /opt/homebrew/bin/bun \
+    /usr/local/bin/bun
+  do
+    if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+version_status() {
+  version=$1
+  old_ifs=$IFS
+  IFS=.
+  set -- $version
+  IFS=$old_ifs
+
+  [ "$#" -eq 3 ] || return "$VERSION_UNRECOGNIZED"
+  major=$1
+  minor=$2
+  patch=$3
+
+  case "$major.$minor.$patch" in
+    *[!0-9.]*) return "$VERSION_UNRECOGNIZED" ;;
+  esac
+
+  [ "$major" -lt "$NEXT_BUN_MAJOR" ] || return "$VERSION_UNSUPPORTED_MAJOR"
+  [ "$major" -eq "$MINIMUM_BUN_MAJOR" ] || return "$VERSION_TOO_OLD"
+  if [ "$minor" -gt "$MINIMUM_BUN_MINOR" ]; then
+    return 0
+  fi
+  if [ "$minor" -eq "$MINIMUM_BUN_MINOR" ] && [ "$patch" -ge "$MINIMUM_BUN_PATCH" ]; then
+    return 0
+  fi
+  return "$VERSION_TOO_OLD"
+}
+
+if ! BUN_BIN=$(find_bun); then
+  printf '%s\n' \
+    "GitRight requires Bun $SUPPORTED_BUN_RANGE, but Bun was not found in PATH or a standard installation path." \
+    "Install a supported Bun 1.x release, then relaunch GitRight. GitRight did not change your environment." >&2
+  exit 127
+fi
+
+if ! VERSION_PROBE_DIRECTORY=$(
+  /usr/bin/mktemp -d "${TMPDIR:-/tmp}/gitright-bun-version.XXXXXX" 2>/dev/null
+); then
+  printf '%s\n' \
+    "GitRight found Bun but could not prepare its bounded version check. Required range: $SUPPORTED_BUN_RANGE." \
+    "GitRight did not change your environment." >&2
+  exit 78
+fi
+
+trap terminate_preflight TERM
+trap interrupt_preflight INT
+
+"$BUN_BIN" --version > "$VERSION_PROBE_DIRECTORY/version" 2>/dev/null &
+VERSION_PROBE_PID=$!
+(
+  timer_pid=
+  stop_watchdog() {
+    if [ -n "$timer_pid" ]; then
+      kill -TERM "$timer_pid" 2>/dev/null || :
+      wait "$timer_pid" 2>/dev/null || :
+    fi
+    exit 0
+  }
+  trap stop_watchdog TERM INT
+
+  /bin/sleep "$VERSION_PROBE_TIMEOUT_SECONDS" &
+  timer_pid=$!
+  if wait "$timer_pid" 2>/dev/null; then
+    timer_pid=
+    if kill -0 "$VERSION_PROBE_PID" 2>/dev/null; then
+      : > "$VERSION_PROBE_DIRECTORY/timed-out"
+      kill -KILL "$VERSION_PROBE_PID" 2>/dev/null || :
+    fi
+  fi
+) &
+VERSION_WATCHDOG_PID=$!
+
+if wait "$VERSION_PROBE_PID" 2>/dev/null; then
+  version_probe_status=0
+else
+  version_probe_status=$?
+fi
+VERSION_PROBE_PID=
+
+kill -TERM "$VERSION_WATCHDOG_PID" 2>/dev/null || :
+wait "$VERSION_WATCHDOG_PID" 2>/dev/null || :
+VERSION_WATCHDOG_PID=
+
+if [ -f "$VERSION_PROBE_DIRECTORY/timed-out" ]; then
+  cleanup_version_probe
+  trap - TERM INT
+  printf '%s\n' \
+    "GitRight found Bun but its version check timed out after $VERSION_PROBE_TIMEOUT_SECONDS seconds. Required range: $SUPPORTED_BUN_RANGE." \
+    "GitRight did not change your environment." >&2
+  exit 78
+fi
+
+if [ "$version_probe_status" -ne 0 ]; then
+  cleanup_version_probe
+  trap - TERM INT
+  printf '%s\n' \
+    "GitRight found Bun but could not read its version. Required range: $SUPPORTED_BUN_RANGE." \
+    "GitRight did not change your environment." >&2
+  exit 78
+fi
+
+BUN_VERSION=$(/bin/cat "$VERSION_PROBE_DIRECTORY/version")
+cleanup_version_probe
+trap - TERM INT
+
+if version_status "$BUN_VERSION"; then
+  :
+else
+  status=$?
+  case "$status" in
+    "$VERSION_TOO_OLD") reason="Bun $BUN_VERSION is too old" ;;
+    "$VERSION_UNSUPPORTED_MAJOR") reason="Bun $BUN_VERSION uses an unsupported major version" ;;
+    *) reason="Bun reported an unrecognized version" ;;
+  esac
+  printf '%s\n' \
+    "GitRight cannot start: $reason. Required range: $SUPPORTED_BUN_RANGE." \
+    "Install a supported Bun 1.x release, then relaunch GitRight. GitRight did not change your environment." >&2
+  exit 78
+fi
+
+exec "$BUN_BIN" "$SCRIPT_DIR/server.js" "$@"
