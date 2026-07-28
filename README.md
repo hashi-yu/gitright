@@ -38,6 +38,20 @@ The marketplace operation and plugin installation may use the network. After
 the prerequisite and installation are complete, the GitRight runtime, including
 its first launch, makes no network requests.
 
+## Upgrade
+
+If the `gitright-beta` marketplace is already registered, refresh its Git
+snapshot first, then install the plugin again:
+
+```sh
+codex plugin marketplace upgrade gitright-beta --json
+codex plugin add gitright@gitright-beta --json
+```
+
+Without the upgrade step, `codex plugin add` reinstalls the previously fetched
+snapshot instead of the latest beta release. Like installation, the upgrade may
+use the network.
+
 ## Privacy and safety
 
 GitRight uses read-only Git operations. It does not modify the repository,
