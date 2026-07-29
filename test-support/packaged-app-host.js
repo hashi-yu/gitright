@@ -129,6 +129,11 @@ function normalizeHostContext(context, previous) {
         previous?.containerDimensions?.maxHeight ?? 900,
     },
     safeAreaInsets: safeAreaInsets(context, previous?.safeAreaInsets),
+    // Standard host global, published outside the host context: hosts
+    // that expose their own surface color let the widget paint against
+    // it instead of against its own.
+    surfaceBackgroundColor: context?.surfaceBackgroundColor ??
+      previous?.surfaceBackgroundColor ?? null,
   };
 }
 
@@ -159,6 +164,7 @@ function openAiGlobals(context) {
     displayMode: context.displayMode,
     maxHeight: context.containerDimensions.maxHeight,
     safeArea: { insets: context.safeAreaInsets },
+    surfaceBackgroundColor: context.surfaceBackgroundColor,
   };
 }
 
@@ -267,6 +273,7 @@ export async function startPackagedAppHost({
           displayMode: openaiContext.displayMode,
           maxHeight: openaiContext.containerDimensions.maxHeight,
           safeArea: { insets: openaiContext.safeAreaInsets },
+          surfaceBackgroundColor: openaiContext.surfaceBackgroundColor ?? undefined,
           widgetState: structuredClone(
             Object.hasOwn(window.parent, "__gitrightPersistedWidgetState")
               ? window.parent.__gitrightPersistedWidgetState
@@ -474,7 +481,12 @@ export async function startPackagedAppHost({
       widget,
       async setHostContext(nextContext) {
         const patch = hostContextPatch(nextContext);
-        hostContext = normalizeHostContext(patch, hostContext);
+        // The surface color is a host global rather than part of the
+        // context notification, so it travels beside the patch.
+        hostContext = normalizeHostContext(
+          { ...patch, surfaceBackgroundColor: nextContext?.surfaceBackgroundColor },
+          hostContext,
+        );
         await updateOpenAiGlobals(openAiGlobals(hostContext));
         await sendToWidget({
           jsonrpc: "2.0",

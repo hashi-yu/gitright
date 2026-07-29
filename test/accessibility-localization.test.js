@@ -186,10 +186,18 @@ test("the GitRight visual layer defines its tokens and never shows the UA mark y
   );
 
   // GitRight-defined tokens, light and dark, on system typography.
-  assert.match(styles, /html\[data-theme="light"\]\s*\{[^}]*--gr-surface:\s*#fbfbfd/);
+  // The surface follows the host's own where one is published; the
+  // GitRight value is the fallback every capture renders against.
+  assert.match(
+    styles,
+    /html\[data-theme="light"\]\s*\{[^}]*--gr-surface:\s*var\(--host-surface-background,\s*#f2f3f7\)/,
+  );
   assert.match(styles, /html\[data-theme="light"\]\s*\{[^}]*--gr-text:\s*#1d1d1f/);
   assert.match(styles, /html\[data-theme="light"\]\s*\{[^}]*--gr-accent:\s*#007aff/);
-  assert.match(styles, /html\[data-theme="dark"\]\s*\{[^}]*--gr-surface:\s*#1c1c1e/);
+  assert.match(
+    styles,
+    /html\[data-theme="dark"\]\s*\{[^}]*--gr-surface:\s*var\(--host-surface-background,\s*#1c1c1e\)/,
+  );
   assert.match(styles, /html\[data-theme="dark"\]\s*\{[^}]*--gr-accent:\s*#0a84ff/);
   assert.match(styles, /--gr-add:\s*#1e7a3c/);
   assert.match(styles, /--gr-del:\s*#c4362b/);

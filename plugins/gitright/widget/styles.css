@@ -12,6 +12,19 @@
   --gr-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Sans",
     "Segoe UI", sans-serif;
   --gr-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  /* The GitRight wordmark at its two sizes: the launcher and the
+     arriving entrance card show it large, the pane header small. The
+     entrance scales one into the other, so the ratio is divided out of
+     these rather than written a third time — which is why the sizes are
+     unitless. Tracking is per size, because a mark set at 34px needs to
+     be tighter than the same mark at 13px, and the enlarged phase of
+     the entrance has to use the large value to match the launcher. */
+  --gr-mark-large: 34;
+  --gr-mark-small: 13;
+  --gr-mark-large-tracking: -0.4px;
+  --gr-mark-small-tracking: 0.2px;
+  /* The margin the widget keeps from the edges of an inline frame. */
+  --gr-inline-inset: 8px;
   --host-max-height: none;
   --host-safe-area-top: 0px;
   --host-safe-area-right: 0px;
@@ -21,7 +34,14 @@
 
 html[data-theme="light"] {
   color-scheme: light;
-  --gr-surface: #fbfbfd; /* Porcelain */
+  /* GitRight's surface follows the host's own wherever the host
+     publishes one, so the pane and the launcher card sit on the color
+     of the app around them rather than on a near-match of our choosing.
+     The GitRight value stays as the fallback for hosts that publish
+     nothing — which is also what deterministic captures render against.
+     A host reports its theme alongside its color, so the fixed text and
+     accent tokens are read against a surface of the matching lightness. */
+  --gr-surface: var(--host-surface-background, #f2f3f7); /* Mist */
   --gr-sheet: #ffffff;
   --gr-sheet-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.05),
     0 10px 32px rgba(0, 0, 0, 0.1);
@@ -57,7 +77,7 @@ html[data-theme="light"] {
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  --gr-surface: #1c1c1e;
+  --gr-surface: var(--host-surface-background, #1c1c1e);
   --gr-sheet: #2c2c2e;
   --gr-sheet-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.3),
     0 10px 32px rgba(0, 0, 0, 0.5);
@@ -107,10 +127,10 @@ body,
 body {
   margin: 0;
   max-height: var(--host-max-height);
-  padding-top: calc(8px + var(--host-safe-area-top));
-  padding-right: calc(8px + var(--host-safe-area-right));
-  padding-bottom: calc(8px + var(--host-safe-area-bottom));
-  padding-left: calc(8px + var(--host-safe-area-left));
+  padding-top: calc(var(--gr-inline-inset) + var(--host-safe-area-top));
+  padding-right: calc(var(--gr-inline-inset) + var(--host-safe-area-right));
+  padding-bottom: calc(var(--gr-inline-inset) + var(--host-safe-area-bottom));
+  padding-left: calc(var(--gr-inline-inset) + var(--host-safe-area-left));
   color: var(--gr-text);
   background: transparent;
   font-family: var(--gr-font);
@@ -189,9 +209,12 @@ button {
 
 .gitright-app {
   display: flex;
+  position: relative;
   flex-direction: column;
   height: 100%;
   min-width: 0;
+  /* Also the containing block for the one-shot entrance card, which
+     enters from outside this box and is clipped to it. */
   overflow: hidden;
   border-radius: 14px;
   background: var(--gr-surface);
@@ -212,12 +235,21 @@ html[data-display-mode="fullscreen"] main.gitright-app {
 
 /* ---- header ---- */
 
+/* The entrance aims its arriving mark at where this header rests the
+   wordmark, so the geometry that decides that has to be readable rather
+   than measured: the vertical padding and the height of the row's
+   tallest control. --gr-header-row must stay at or above every other
+   control's height here, or the row grows and the aim drifts. */
 .gr-header {
+  --gr-header-inset: 16px;
+  --gr-header-pad-y: 10px;
+  --gr-header-row: 30px;
+
   display: flex;
   flex: none;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px 10px 16px;
+  padding: var(--gr-header-pad-y) 12px var(--gr-header-pad-y) var(--gr-header-inset);
 }
 
 /* The wordmark matches the launcher's treatment: Git in text color,
@@ -226,9 +258,9 @@ html[data-display-mode="fullscreen"] main.gitright-app {
   flex: none;
   margin: 0;
   color: var(--gr-text);
-  font-size: 13px;
+  font-size: calc(var(--gr-mark-small) * 1px);
   font-weight: 600;
-  letter-spacing: 0.2px;
+  letter-spacing: var(--gr-mark-small-tracking);
   line-height: 1.45;
 }
 
@@ -306,7 +338,7 @@ html[data-display-mode="fullscreen"] main.gitright-app {
   align-items: center;
   gap: 7px;
   min-width: 0;
-  height: 30px;
+  height: var(--gr-header-row);
   border-radius: 8px;
   padding: 0 9px;
   color: var(--gr-text-faint);
@@ -1349,35 +1381,90 @@ code {
 
 /* The host renders the borderless inline frame at its own fixed height;
    the launcher paints the host's conversation surface color behind a
-   ghost commit graph so it blends into the thread. The whole card is
-   one action: activation replays the graph in lane colors, reveals the
-   GitRight wordmark, and flies it toward the right pane — the fly-out's
-   animationend issues the display-mode request (no timers). */
+   sheet card in GitRight's own surface vocabulary, so it reads as a
+   GitRight object set into the thread rather than as thread content.
+   The whole card is one action, and the mark names its destination
+   while it waits: only "Right" drifts right, and activation sends the
+   card the same way — the exit's animationend issues the display-mode
+   request (no timers). */
 .launcher {
+  /* One reserved box for the status line: its own height, and the same
+     height mirrored above the card. The status keeps that box whether
+     or not it has anything to say, so centring the column alone would
+     seat the card that much above the frame's middle; the mirror puts
+     the card back on the centre of the frame itself, and the status
+     stays in flow where a short frame shrinks the card instead of
+     letting the two overlap. */
+  --launcher-status-height: calc(1.45 * 12px + 10px);
+  /* The drawable width of the inline frame, mirroring the padding the
+     host's safe area contributes to the body: how far the card has to
+     travel to clear the right edge is measured from this. */
+  --launcher-width: calc(
+    100vw - 2 * var(--gr-inline-inset)
+      - var(--host-safe-area-left) - var(--host-safe-area-right)
+  );
+
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  justify-content: center;
   height: 100%;
+  /* The edge that takes the leaving card away. Clipping rather than
+     hiding leaves the vertical axis alone, so a hovered card's lift is
+     never cropped, and it stops a travel this long from adding
+     scrollable overflow to the frame. The margin pushes the cut out
+     past the body's own padding, onto the frame's real edge, which is
+     both what the card should disappear behind and far enough out that
+     a resting card's shadow is never clipped at a narrow width. */
+  overflow-x: clip;
+  overflow-y: visible;
+  overflow-clip-margin: 24px;
+  padding: var(--launcher-status-height) 10px 0;
   color: var(--gr-text);
   background: var(--host-surface-background, transparent);
   font-family: var(--gr-font);
 }
 
+/* The button is the card face: the whole surface is the target, so the
+   hover lift and the exit ride on it directly. The card keeps its own
+   bounds instead of filling the frame — the host decides how wide and
+   tall the inline frame is, and a conversation column is wide enough
+   that a full-bleed card stops reading as a card and leaves the exit
+   travelling a few per cent of its own width. */
 .launcher-action {
+  /* The same mirroring the frame does for the status line, one level
+     in: the hint keeps its box while invisible, so an empty row of that
+     height above the mark leaves the mark itself on the card's centre
+     rather than a mark-and-hint pair straddling it. */
+  --launcher-hint-height: calc(1.45 * 12px);
+
   display: grid;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
+  align-self: center;
   place-content: center;
   justify-items: center;
-  gap: 12px;
+  gap: 10px;
+  width: min(340px, 100%);
   min-height: 0;
   margin: 0;
   border: 0;
   border-radius: 12px;
-  padding: 0;
+  padding: 28px 16px;
   color: inherit;
-  background: none;
+  background: var(--gr-surface);
+  box-shadow: var(--gr-sheet-shadow);
   cursor: pointer;
   font: inherit;
+  transition: transform 0.18s ease;
+}
+
+.launcher-action::before {
+  content: "";
+  height: var(--launcher-hint-height);
+}
+
+.launcher-action:hover:enabled {
+  transform: translateY(-2px);
 }
 
 .launcher-action:disabled {
@@ -1389,248 +1476,105 @@ code {
   outline-offset: -2px;
 }
 
-.launcher-graph {
-  width: min(340px, 86%);
-  height: auto;
-  overflow: visible;
+/* The wordmark at its large size, shared with the stand-in the entrance
+   card carries at narrow widths so the two are one definition. 600, not
+   700: the same weight the pane header uses, so the mark that waits
+   here is the same object that lands in the header. */
+.launcher-mark,
+.gr-entrance-mark {
+  font: 600 calc(var(--gr-mark-large) * 1px) / 1.1 var(--gr-font);
+  letter-spacing: var(--gr-mark-large-tracking);
+  white-space: nowrap;
 }
 
-.launcher-line {
-  fill: none;
-  stroke-width: 3;
-  stroke-linecap: round;
+.launcher-mark-right {
+  display: inline-block;
+  color: var(--gr-accent);
+  animation: launcher-drift 2400ms cubic-bezier(0.4, 0, 0.3, 1) infinite;
 }
 
-.launcher-dot {
-  fill: var(--host-surface-background, var(--gr-surface));
-  stroke-width: 3;
+@keyframes launcher-drift {
+  0%, 62%, 100% {
+    translate: 0 0;
+  }
+
+  28% {
+    translate: 8px 0;
+  }
 }
 
-/* Resting state: the graph waits as an unpainted sketch. */
-.launcher-base .launcher-line,
-.launcher-base .launcher-dot {
-  stroke: color-mix(in srgb, var(--gr-text) 26%, transparent);
+/* Hover adds to the idle drift instead of replacing it. Pausing holds
+   the loop at its current value and the glide layer offsets from there,
+   so entering the card never snaps the mark back to zero — which is
+   what putting both on one element would do. */
+.launcher-action:hover .launcher-mark-right {
+  animation-play-state: paused;
 }
 
-.launcher-base {
-  transition: opacity 0.15s ease;
+.launcher-mark-glide {
+  display: inline-block;
+  transition: translate 0.22s cubic-bezier(0.3, 0.7, 0.3, 1);
 }
 
-.launcher-action:hover .launcher-base {
-  opacity: 0.75;
+.launcher-action:hover .launcher-mark-glide {
+  translate: 10px 0;
 }
 
+/* The hint is the button's accessible name, so it is faded rather than
+   removed: opacity keeps it in the accessibility tree, and keeping its
+   box means revealing it never reflows the card. */
 .launcher-hint {
+  height: var(--launcher-hint-height);
   color: var(--gr-text-dim);
   font-size: 12px;
-  transition: color 0.15s ease;
+  opacity: 0;
+  transition: opacity 0.18s ease;
 }
 
 .launcher-action:hover .launcher-hint {
-  color: var(--gr-text);
+  opacity: 0.55;
 }
 
-.launcher-requesting .launcher-hint {
-  animation: launcher-fade-out 400ms ease forwards;
+/* Motion and hover are otherwise the only cues that this is pressable.
+   Reduced motion removes the first and touch never had the second, so
+   both put the words back permanently. The resting opacity is raised
+   rather than transitioned, because the blanket reduced-motion rule at
+   the end of this file drops every transition. */
+@media (prefers-reduced-motion: reduce) {
+  .launcher-hint {
+    opacity: 0.55;
+  }
 }
 
-/* Activation: the play layer paints the sketch left to right in the
-   §4.3.1 lane palette, commits pop as the lines reach them, the merge
-   ring flares, and the wordmark flows in before flying right. */
-.launcher-play {
-  visibility: hidden;
+@media (hover: none) {
+  .launcher-hint {
+    opacity: 0.55;
+  }
 }
 
-.launcher-requesting .launcher-play {
-  visibility: visible;
+/* Activation: the card leaves through the right edge of the inline
+   area, and its animationend — not a timer — issues the display-mode
+   request. Nothing fades; the disappearance is the travel. The card
+   goes far enough to clear that edge outright — half the frame, half
+   its own width, and its shadow — so the launcher's clip takes it away
+   from the right inward until the left edge follows it out. The curve
+   starts gently, because a card that jumps on the first frame reads as
+   a cut rather than as leaving, and the distance is covered on the way
+   out where there is progressively less of the card left to watch. */
+.launcher-requesting .launcher-action {
+  animation: launcher-exit 420ms cubic-bezier(0.4, 0, 0.75, 0.9) both;
 }
 
-.launcher-requesting .launcher-base {
-  animation: launcher-fade-out 300ms ease 1340ms forwards;
-  opacity: 0.3;
-}
-
-.launcher-play .launcher-line-main {
-  stroke: var(--lane-0);
-  stroke-dasharray: 260;
-  stroke-dashoffset: 260;
-}
-
-.launcher-play .launcher-line-feat1 {
-  stroke: var(--lane-2);
-  stroke-dasharray: 135;
-  stroke-dashoffset: 135;
-}
-
-.launcher-play .launcher-line-feat2 {
-  stroke: var(--lane-7);
-  stroke-dasharray: 260;
-  stroke-dashoffset: 260;
-}
-
-.launcher-play .launcher-line-feat3 {
-  stroke: var(--lane-4);
-  stroke-dasharray: 105;
-  stroke-dashoffset: 105;
-}
-
-.launcher-requesting .launcher-play .launcher-line-main {
-  animation: launcher-draw 800ms cubic-bezier(0.3, 0.1, 0.7, 0.9) forwards;
-}
-
-.launcher-requesting .launcher-play .launcher-line-feat1 {
-  animation: launcher-draw 340ms cubic-bezier(0.3, 0.1, 0.7, 0.9) 110ms forwards;
-}
-
-.launcher-requesting .launcher-play .launcher-line-feat2 {
-  animation: launcher-draw 520ms cubic-bezier(0.3, 0.1, 0.7, 0.9) 175ms forwards;
-}
-
-.launcher-requesting .launcher-play .launcher-line-feat3 {
-  animation: launcher-draw 300ms cubic-bezier(0.3, 0.1, 0.7, 0.9) 430ms forwards;
-}
-
-@keyframes launcher-draw {
+@keyframes launcher-exit {
   to {
-    stroke-dashoffset: 0;
-  }
-}
-
-.launcher-play .launcher-dot {
-  opacity: 0;
-  transform-origin: center;
-  transform-box: fill-box;
-}
-
-.launcher-play .launcher-dot-main {
-  stroke: var(--lane-0);
-}
-
-.launcher-play .launcher-dot-feat1 {
-  stroke: var(--lane-2);
-}
-
-.launcher-play .launcher-dot-feat2 {
-  stroke: var(--lane-7);
-}
-
-.launcher-play .launcher-dot-feat3 {
-  stroke: var(--lane-4);
-}
-
-.launcher-play .launcher-dot-merge {
-  fill: var(--lane-0);
-  stroke: var(--lane-0);
-}
-
-.launcher-requesting .launcher-play .launcher-dot {
-  animation: launcher-pop 240ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-.launcher-requesting .launcher-play .launcher-d-b1 { animation-delay: 100ms; }
-.launcher-requesting .launcher-play .launcher-d-b2 { animation-delay: 165ms; }
-.launcher-requesting .launcher-play .launcher-d-f1a { animation-delay: 250ms; }
-.launcher-requesting .launcher-play .launcher-d-f1b { animation-delay: 330ms; }
-.launcher-requesting .launcher-play .launcher-d-m1 { animation-delay: 360ms; }
-.launcher-requesting .launcher-play .launcher-d-f2a { animation-delay: 365ms; }
-.launcher-requesting .launcher-play .launcher-d-b3 { animation-delay: 425ms; }
-.launcher-requesting .launcher-play .launcher-d-f2b { animation-delay: 500ms; }
-.launcher-requesting .launcher-play .launcher-d-f3a { animation-delay: 570ms; }
-.launcher-requesting .launcher-play .launcher-d-m3 { animation-delay: 600ms; }
-.launcher-requesting .launcher-play .launcher-d-m2 { animation-delay: 680ms; }
-.launcher-requesting .launcher-play .launcher-d-head { animation-delay: 780ms; }
-
-@keyframes launcher-pop {
-  0% {
-    opacity: 0;
-    scale: 0.2;
-  }
-
-  100% {
-    opacity: 1;
-    scale: 1;
-  }
-}
-
-.launcher-merge-ring {
-  fill: none;
-  stroke: var(--lane-0);
-  stroke-width: 2;
-  opacity: 0;
-  transform-origin: center;
-  transform-box: fill-box;
-}
-
-.launcher-requesting .launcher-play .launcher-merge-ring {
-  animation: launcher-ring 440ms ease-out 680ms forwards;
-}
-
-@keyframes launcher-ring {
-  0% {
-    opacity: 0.8;
-    scale: 0.4;
-  }
-
-  100% {
-    opacity: 0;
-    scale: 2.2;
-  }
-}
-
-.launcher-wordmark {
-  opacity: 0;
-  font: 600 16px var(--gr-font);
-  letter-spacing: 0.2px;
-}
-
-.launcher-word {
-  fill: var(--gr-text);
-}
-
-.launcher-word-right {
-  fill: var(--gr-accent);
-}
-
-.launcher-requesting .launcher-play .launcher-wordmark {
-  animation:
-    launcher-word-in 300ms cubic-bezier(0.2, 0.7, 0.3, 1) 880ms forwards,
-    launcher-word-out 320ms cubic-bezier(0.55, 0, 0.85, 0.4) 1340ms forwards;
-}
-
-@keyframes launcher-word-in {
-  from {
-    opacity: 0;
-    translate: -10px 0;
-  }
-
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-
-@keyframes launcher-word-out {
-  to {
-    opacity: 0;
-    translate: 130px 0;
-  }
-}
-
-/* The painted graph retires as the wordmark departs. */
-.launcher-requesting .launcher-play .launcher-drawn {
-  animation: launcher-fade-out 300ms ease 1340ms forwards;
-}
-
-@keyframes launcher-fade-out {
-  to {
-    opacity: 0;
+    translate: calc(var(--launcher-width) / 2 + 50% + 64px) 0;
   }
 }
 
 .launcher-status {
   flex: none;
   min-width: 0;
-  min-height: 1.45em;
+  min-height: var(--launcher-status-height);
   margin: 0;
   padding: 0 12px 10px;
   color: var(--gr-text-dim);
@@ -1641,40 +1585,181 @@ code {
 
 /* ---- one-shot pane entrance (launcher activation only) ---- */
 
-/* Played only when fullscreen was reached through the launcher: the
-   wordmark arrives from the left (the direction the launcher sent it),
-   docks into the header, then history rows and the commit sheet build
-   up on the first ready render. Direct fullscreen render, refresh, and
-   restore never carry these classes, which also keeps
-   visual captures deterministic. The sentinel's animationend releases
-   the classes — event-driven, no timers. */
-/* The whole choreography waits ~450ms so the host finishes sliding the
+/* Played only when fullscreen was reached through the launcher: a card
+   in the launcher's own surface vocabulary slides in from the pane's
+   left edge — continuing the direction the launcher card left in — then
+   opens out to the pane's full bounds while the wordmark it carries
+   shrinks onto the header's own. History rows and the commit sheet
+   build up afterwards on the first ready render. Direct fullscreen
+   render, refresh, and restore never carry these classes, which also
+   keeps visual captures deterministic. The card's animationend releases
+   the rest — event-driven, no timers.
+
+   Nothing crosses the frame boundary: the inline launcher and the pane
+   are separate widget instances, and the host closes the inline frame
+   the moment the pane opens. Each half plays inside its own frame and
+   the eye stitches them into one gesture.
+
+   The whole choreography waits ~450ms so the host finishes sliding the
    pane open before anything moves — otherwise the arrival plays behind
-   the opening pane and reads as nothing. The wordmark then travels a
-   long visible stretch in from the left before docking. */
-.gr-entrance .gr-app {
-  animation: gr-ent-dock 1150ms cubic-bezier(0.32, 0.72, 0.35, 1) 450ms both;
+   the opening pane and reads as nothing.
+
+   The pane needs no separate opening color: --gr-surface already is the
+   host's own where the host publishes one, so the first frame is
+   already the right color and there is nothing to hand over. */
+.gr-entrance {
+  /* The pane's own width, measured inside the safe area the host
+     reserves, so the arriving card and mark are placed from the real
+     pane rather than from a width baked into a mock. */
+  --gr-ent-width: calc(
+    100vw - var(--host-safe-area-left) - var(--host-safe-area-right)
+  );
+  --gr-ent-inset: 12px;
+  /* The launcher card's own proportions, so the surface that arrives
+     reads as the one that left. */
+  --gr-ent-height: 148px;
 }
 
-@keyframes gr-ent-dock {
+/* The arriving surface. It carries the release signal for the rest of
+   the choreography rather than the header wordmark doing so, because
+   the wordmark is display:none below 480 CSS px and a display:none
+   element never runs an animation to report. */
+.gr-entrance-card {
+  position: absolute;
+  z-index: 5;
+  top: var(--gr-ent-inset);
+  right: var(--gr-ent-inset);
+  left: var(--gr-ent-inset);
+  height: var(--gr-ent-height);
+  border-radius: 12px;
+  /* The same surface as the pane it opens into, so the expansion ends
+     on exactly the color it began with. */
+  background: var(--gr-surface);
+  box-shadow: var(--gr-sheet-shadow);
+  pointer-events: none;
+  animation:
+    gr-ent-open 520ms cubic-bezier(0.32, 0.72, 0.35, 1) 450ms both,
+    gr-ent-card-out 160ms ease 990ms forwards;
+}
+
+/* Enters entirely from outside the pane (the app clips it), holds as a
+   card for a beat, then opens to the pane's bounds. */
+@keyframes gr-ent-open {
   0% {
-    opacity: 0;
-    transform: translate(calc(50vw - 220px), 30vh) scale(1.55);
+    transform: translateX(calc(-100% - var(--gr-ent-inset)));
+    top: var(--gr-ent-inset);
+    right: var(--gr-ent-inset);
+    left: var(--gr-ent-inset);
+    height: var(--gr-ent-height);
+    border-radius: 12px;
   }
 
-  35% {
-    opacity: 1;
-    transform: translate(calc(50vw - 84px), 30vh) scale(1.55);
-  }
-
-  60% {
-    opacity: 1;
-    transform: translate(calc(50vw - 84px), 30vh) scale(1.55);
+  45% {
+    transform: translateX(0);
+    top: var(--gr-ent-inset);
+    right: var(--gr-ent-inset);
+    left: var(--gr-ent-inset);
+    height: var(--gr-ent-height);
+    border-radius: 12px;
   }
 
   100% {
-    opacity: 1;
-    transform: translate(0, 0) scale(1);
+    transform: translateX(0);
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 100%;
+    border-radius: 0;
+  }
+}
+
+@keyframes gr-ent-card-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Below 480 CSS px the header drops its wordmark, so there is nothing
+   for an arriving mark to land on. No landing happens at those widths
+   and that is the accepted behavior, not a gap: the card carries its
+   own mark and the two dissolve together, which still hands over both
+   the surface and the mark at the supported minimum width. Above the
+   breakpoint the header's own wordmark does the arrival and this
+   stand-in stays out of the way. */
+.gr-entrance-mark {
+  display: none;
+}
+
+@media (max-width: 479px) {
+  .gr-entrance-mark {
+    display: block;
+    position: absolute;
+    top: calc(var(--gr-ent-height) / 2);
+    left: 50%;
+    color: var(--gr-text);
+    translate: -50% -50%;
+  }
+
+  .gr-entrance-mark-right {
+    color: var(--gr-accent);
+  }
+}
+
+/* The header's own wordmark is the mark that arrives: it rides in with
+   the card, holds while the card opens, then shrinks onto its resting
+   place. The landing is pixel-exact because the final keyframe is the
+   element's untransformed self rather than a position derived from a
+   fixed pane width. Below 480 CSS px the header drops the wordmark, and
+   there the card arrives carrying its own instead (see above). */
+.gr-entrance .gr-app {
+  /* The header sets the mark small; the enlarged phase has to read as
+     the launcher's large one, so the scale is the ratio between the two
+     sizes and the tracking is the large value divided back out of that
+     scale — otherwise the header's own tracking would be magnified with
+     the glyphs and the enlarged mark would be set looser than the
+     launcher card it continues. Tracking is all that can be matched:
+     glyph advances laid out at the small size and then scaled stay a
+     few per cent wider than the same face set large outright, and no
+     tracking value fixes that without visibly cramping the letters. */
+  --gr-ent-mark-scale: calc(var(--gr-mark-large) / var(--gr-mark-small));
+  --gr-ent-mark-tracking: calc(
+    var(--gr-mark-large-tracking) * var(--gr-mark-small) / var(--gr-mark-large)
+  );
+  /* Centre the mark on the card: the element's own half-width comes
+     from the percentage, which resolves against its border box. */
+  --gr-ent-mark-x: calc(
+    var(--gr-ent-width) / 2 - var(--gr-header-inset) - 50%
+  );
+  /* Down from the wordmark's own resting centre — the header's top
+     padding plus half its control row — to the card's. */
+  --gr-ent-mark-y: calc(
+    var(--gr-ent-inset) + var(--gr-ent-height) / 2
+      - var(--gr-header-pad-y) - var(--gr-header-row) / 2
+  );
+  position: relative;
+  z-index: 6;
+  animation: gr-ent-mark 540ms cubic-bezier(0.32, 0.72, 0.35, 1) 450ms both;
+}
+
+@keyframes gr-ent-mark {
+  0% {
+    translate:
+      calc(var(--gr-ent-mark-x) - var(--gr-ent-width) + var(--gr-ent-inset))
+      var(--gr-ent-mark-y);
+    scale: var(--gr-ent-mark-scale);
+    letter-spacing: var(--gr-ent-mark-tracking);
+  }
+
+  43% {
+    translate: var(--gr-ent-mark-x) var(--gr-ent-mark-y);
+    scale: var(--gr-ent-mark-scale);
+    letter-spacing: var(--gr-ent-mark-tracking);
+  }
+
+  100% {
+    translate: 0 0;
+    scale: 1;
+    letter-spacing: var(--gr-mark-small-tracking);
   }
 }
 
@@ -1684,40 +1769,48 @@ code {
   }
 }
 
-/* Everything else waits for the wordmark to finish docking (the
-   gr-entrance-ready class arrives with the dock's animationend and a
-   ready history): until then the pane shows only the arriving logo. */
+/* Everything else waits for the card to finish opening (the
+   gr-entrance-ready class arrives with the card's animationend and a
+   ready history): until then the pane shows only the arriving card. */
 .gr-entrance:not(.gr-entrance-ready) .gr-header > :not(.gr-app),
 .gr-entrance:not(.gr-entrance-ready) .gr-history,
-.gr-entrance:not(.gr-entrance-ready) .gr-sheetwrap {
+.gr-entrance:not(.gr-entrance-ready) .gr-sheetwrap,
+.gr-entrance:not(.gr-entrance-ready) .gr-statusbar {
   opacity: 0;
 }
 
-.gr-entrance-ready .gr-header > :not(.gr-app) {
+.gr-entrance-ready .gr-header > :not(.gr-app),
+.gr-entrance-ready .gr-statusbar {
   animation: gr-ent-fade 260ms ease both;
 }
 
+/* The stagger only has to establish that the rows arrive in order; past
+   that it is the user waiting on the pane. 45ms between rows still
+   reads as a cascade and puts the eighth row in place well under half a
+   second, so the whole entrance lands near its ~1.5s budget instead of
+   trailing past two. Rows past the eighth share the base delay: they
+   are below the fold on any supported pane height. */
 .gr-entrance-ready .graph-commit-list > *,
 .gr-entrance-ready .text-commit-list > * {
-  animation: gr-ent-rise 240ms ease 640ms both;
+  animation: gr-ent-rise 200ms ease 420ms both;
 }
 
 .gr-entrance-ready .graph-commit-list > :nth-child(1),
-.gr-entrance-ready .text-commit-list > :nth-child(1) { animation-delay: 80ms; }
+.gr-entrance-ready .text-commit-list > :nth-child(1) { animation-delay: 60ms; }
 .gr-entrance-ready .graph-commit-list > :nth-child(2),
-.gr-entrance-ready .text-commit-list > :nth-child(2) { animation-delay: 150ms; }
+.gr-entrance-ready .text-commit-list > :nth-child(2) { animation-delay: 105ms; }
 .gr-entrance-ready .graph-commit-list > :nth-child(3),
-.gr-entrance-ready .text-commit-list > :nth-child(3) { animation-delay: 220ms; }
+.gr-entrance-ready .text-commit-list > :nth-child(3) { animation-delay: 150ms; }
 .gr-entrance-ready .graph-commit-list > :nth-child(4),
-.gr-entrance-ready .text-commit-list > :nth-child(4) { animation-delay: 290ms; }
+.gr-entrance-ready .text-commit-list > :nth-child(4) { animation-delay: 195ms; }
 .gr-entrance-ready .graph-commit-list > :nth-child(5),
-.gr-entrance-ready .text-commit-list > :nth-child(5) { animation-delay: 360ms; }
+.gr-entrance-ready .text-commit-list > :nth-child(5) { animation-delay: 240ms; }
 .gr-entrance-ready .graph-commit-list > :nth-child(6),
-.gr-entrance-ready .text-commit-list > :nth-child(6) { animation-delay: 430ms; }
+.gr-entrance-ready .text-commit-list > :nth-child(6) { animation-delay: 285ms; }
 .gr-entrance-ready .graph-commit-list > :nth-child(7),
-.gr-entrance-ready .text-commit-list > :nth-child(7) { animation-delay: 500ms; }
+.gr-entrance-ready .text-commit-list > :nth-child(7) { animation-delay: 330ms; }
 .gr-entrance-ready .graph-commit-list > :nth-child(8),
-.gr-entrance-ready .text-commit-list > :nth-child(8) { animation-delay: 570ms; }
+.gr-entrance-ready .text-commit-list > :nth-child(8) { animation-delay: 375ms; }
 
 @keyframes gr-ent-rise {
   from {
@@ -1726,9 +1819,10 @@ code {
   }
 }
 
-/* The commit sheet enters with the diff layer's bottom-sheet vocabulary. */
+/* The commit sheet enters with the diff layer's bottom-sheet vocabulary,
+   overlapping the rows rather than queueing behind them. */
 .gr-entrance-ready .gr-sheet {
-  animation: gr-ent-sheet 320ms cubic-bezier(0.32, 0.72, 0.35, 1) 700ms both;
+  animation: gr-ent-sheet 300ms cubic-bezier(0.32, 0.72, 0.35, 1) 280ms both;
 }
 
 @keyframes gr-ent-sheet {
@@ -1739,20 +1833,24 @@ code {
 
 .gr-entrance-ready .gr-detail > *,
 .gr-entrance-ready .gr-files > * {
-  animation: gr-ent-fade 220ms ease 1120ms both;
+  animation: gr-ent-fade 200ms ease 520ms both;
 }
 
-.gr-entrance-ready .gr-detail > :nth-child(1) { animation-delay: 980ms; }
-.gr-entrance-ready .gr-detail > :nth-child(2) { animation-delay: 1050ms; }
-.gr-entrance-ready .gr-files > :nth-child(1) { animation-delay: 1020ms; }
-.gr-entrance-ready .gr-files > :nth-child(2) { animation-delay: 1090ms; }
+.gr-entrance-ready .gr-detail > :nth-child(1) { animation-delay: 420ms; }
+.gr-entrance-ready .gr-detail > :nth-child(2) { animation-delay: 470ms; }
+.gr-entrance-ready .gr-files > :nth-child(1) { animation-delay: 450ms; }
+.gr-entrance-ready .gr-files > :nth-child(2) { animation-delay: 500ms; }
 
+/* The sentinel is mounted when gr-entrance-ready lands, so its delay
+   only has to outlast the ready phase — the longest tail there is the
+   sheet's second file row at 500ms + 200ms. 1000ms clears it without
+   cutting the stagger short. */
 .gr-entrance-sentinel {
   position: absolute;
   width: 0;
   height: 0;
   overflow: hidden;
-  animation: gr-entrance-end 1ms linear 1500ms both;
+  animation: gr-entrance-end 1ms linear 1000ms both;
 }
 
 @keyframes gr-entrance-end {

@@ -360,8 +360,11 @@ function applyHostEnvironment(environment: HostEnvironment): void {
   }
 }
 
-/* The borderless inline launcher paints the host's own conversation
-   surface color behind itself so it blends into the thread. */
+/* The host's own surface color, when it publishes one. The inline
+   launcher paints it behind its card so the card sits in the thread
+   rather than on a slab of GitRight's own color, and the pane entrance
+   opens on it so nothing flashes before the arriving card brings the
+   GitRight surface in. */
 function hostSurfaceBackground(): string | null {
   const value = (window.openai as { surfaceBackgroundColor?: unknown } | undefined)
     ?.surfaceBackgroundColor;
@@ -1976,9 +1979,9 @@ function StatusBar({
 /* ---- complete view ---- */
 
 /* Watchdog bounds for the one-shot entrance (§4.3): generous multiples
-   of the choreography's own runtime (dock 1600 ms, sentinel 1500 ms),
-   so they never race a healthy animationend and only catch entrances
-   whose release event was lost. */
+   of the choreography's own runtime (card arrival 970 ms, sentinel
+   1000 ms), so they never race a healthy animationend and only catch
+   entrances whose release event was lost. */
 const ENTRANCE_ARMED_FALLBACK_MS = 8000;
 const ENTRANCE_READY_FALLBACK_MS = 4000;
 
@@ -1996,9 +1999,12 @@ function GitRightView({
   /* One-shot pane entrance: armed only when fullscreen was reached
      through the launcher; released by the CSS sentinel's animationend.
      The rest of the choreography (header, rows, sheet) waits for the
-     wordmark dock to finish — signalled by its animationend. */
+     arriving card to finish opening — signalled by its animationend.
+     The signal rides on the card rather than the header wordmark
+     because the wordmark is display:none below 480 CSS px, and a
+     display:none element never runs an animation to report. */
   const [entranceDone, setEntranceDone] = useState(false);
-  const [entranceDocked, setEntranceDocked] = useState(false);
+  const [entranceOpened, setEntranceOpened] = useState(false);
   const [state, setState] = useState<RepositoryState>({
     status: "loading",
     message: "Opening repository…",
@@ -2007,7 +2013,7 @@ function GitRightView({
   /* A history error aborts the entrance outright so the error message
      is never left hidden behind the logo-only stage. */
   const entranceActive = entrance && !entranceDone && history.status !== "error";
-  const entranceReady = entranceActive && entranceDocked && history.status === "ready";
+  const entranceReady = entranceActive && entranceOpened && history.status === "ready";
   /* The release above is driven by animationend, but the host can cancel
      a CSS animation without ever finishing it — a dynamic
      prefers-reduced-motion flip, a display:none while the pane resizes,
@@ -2021,7 +2027,7 @@ function GitRightView({
     if (!entranceActive) return;
     const abort = (event: Event) => {
       const animationName = (event as AnimationEvent).animationName;
-      if (animationName === "gr-ent-dock" || animationName === "gr-entrance-end") {
+      if (animationName === "gr-ent-open" || animationName === "gr-entrance-end") {
         setEntranceDone(true);
       }
     };
@@ -2801,12 +2807,7 @@ function GitRightView({
       }`}
       aria-labelledby="gitright-wordmark"
     >
-      <header
-        className="gr-header"
-        onAnimationEnd={(event) => {
-          if (event.animationName === "gr-ent-dock") setEntranceDocked(true);
-        }}
-      >
+      <header className="gr-header">
         <h1 id="gitright-wordmark" className="gr-app">
           Git<span className="gr-app-right">Right</span>
         </h1>
@@ -3010,6 +3011,19 @@ function GitRightView({
       </section>
       <div className="gr-sheetwrap">{sheetContent}</div>
       <StatusBar state={state} copy={copy} />
+      {entranceActive ? (
+        <div
+          className="gr-entrance-card"
+          aria-hidden="true"
+          onAnimationEnd={(event) => {
+            if (event.animationName === "gr-ent-open") setEntranceOpened(true);
+          }}
+        >
+          <span className="gr-entrance-mark">
+            Git<span className="gr-entrance-mark-right">Right</span>
+          </span>
+        </div>
+      ) : null}
       {entranceReady ? (
         <span
           className="gr-entrance-sentinel"
@@ -3063,56 +3077,6 @@ function DeveloperViewportMetrics(): React.ReactElement | null {
     >
       {label}
     </output>
-  );
-}
-
-/* The launcher's decorative commit graph: three feature branches leaving
-   main from real branch-point commits, merging back out of order, with
-   the freed lane reused — the shape a real repository would draw. */
-const LAUNCHER_GRAPH_LINES = [
-  { key: "main", d: "M8 62 H252" },
-  { key: "feat1", d: "M44 62 C54 62 54 36 66 36 L108 36 C120 36 118 62 128 62" },
-  { key: "feat2", d: "M66 62 C76 62 76 14 88 14 L204 14 C216 14 216 62 226 62" },
-  { key: "feat3", d: "M148 62 C158 62 158 36 170 36 L182 36 C194 36 192 62 200 62" },
-] as const;
-
-const LAUNCHER_GRAPH_DOTS = [
-  { key: "b1", cx: 44, cy: 62, lane: "main" },
-  { key: "b2", cx: 66, cy: 62, lane: "main" },
-  { key: "f1a", cx: 80, cy: 36, lane: "feat1" },
-  { key: "f1b", cx: 98, cy: 36, lane: "feat1" },
-  { key: "m1", cx: 128, cy: 62, lane: "merge" },
-  { key: "f2a", cx: 120, cy: 14, lane: "feat2" },
-  { key: "b3", cx: 148, cy: 62, lane: "main" },
-  { key: "f2b", cx: 168, cy: 14, lane: "feat2" },
-  { key: "f3a", cx: 176, cy: 36, lane: "feat3" },
-  { key: "m3", cx: 200, cy: 62, lane: "merge" },
-  { key: "m2", cx: 226, cy: 62, lane: "merge" },
-  { key: "head", cx: 246, cy: 62, lane: "main" },
-] as const;
-
-function LauncherGraphShape({ layer }: { layer: "base" | "play" }): React.ReactElement {
-  return (
-    <>
-      {LAUNCHER_GRAPH_LINES.map((line) => (
-        <path
-          key={line.key}
-          className={`launcher-line launcher-line-${line.key}`}
-          d={line.d}
-        />
-      ))}
-      {LAUNCHER_GRAPH_DOTS.map((dot) => (
-        <circle
-          key={dot.key}
-          className={layer === "base"
-            ? "launcher-dot"
-            : `launcher-dot launcher-dot-${dot.lane} launcher-d-${dot.key}`}
-          cx={dot.cx}
-          cy={dot.cy}
-          r={6}
-        />
-      ))}
-    </>
   );
 }
 
@@ -3182,11 +3146,11 @@ function App(): React.ReactElement {
     setLauncherStatus(transition.status);
   }
 
-  /* Activation first lets the launcher graph replay finish (animationend
-     of the wordmark's fly-out), then issues the display-mode request;
+  /* Activation first lets the launcher card leave to the right
+     (animationend of its exit), then issues the display-mode request;
      the host closes the inline frame as soon as the pane opens, so an
      immediate request would hide the animation entirely. Reduced motion
-     skips the replay and requests at once. No timer is involved. */
+     skips the exit and requests at once. No timer is involved. */
   function openInRightPane(): void {
     if (displayModeRequestInFlight.current || launcherDeparting) return;
     /* Written at activation so it reaches the host well before the
@@ -3200,7 +3164,7 @@ function App(): React.ReactElement {
   }
 
   function completeLauncherDeparture(event: React.AnimationEvent): void {
-    if (!launcherDeparting || event.animationName !== "launcher-word-out") return;
+    if (!launcherDeparting || event.animationName !== "launcher-exit") return;
     requestRightPane();
   }
 
@@ -3266,27 +3230,17 @@ function App(): React.ReactElement {
           onClick={openInRightPane}
           onAnimationEnd={completeLauncherDeparture}
         >
-          <svg
-            className="launcher-graph"
-            viewBox="0 0 340 96"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <g className="launcher-base">
-              <LauncherGraphShape layer="base" />
-            </g>
-            <g className="launcher-play">
-              <g className="launcher-drawn">
-                <LauncherGraphShape layer="play" />
-                <circle className="launcher-merge-ring" cx={226} cy={62} r={10} />
-              </g>
-              <g className="launcher-wordmark">
-                <text className="launcher-word" x={262} y={67}>
-                  Git<tspan className="launcher-word-right">Right</tspan>
-                </text>
-              </g>
-            </g>
-          </svg>
+          {/* Hidden from assistive technology so the button's accessible
+              name stays the hint's "Open GitRight" rather than gaining a
+              redundant "GitRight" in front of it. The two nested spans
+              exist so the idle drift and the hover glide compose: the
+              loop lives on the outer one, the hover offset on the inner,
+              and entering the card never snaps the mark back to zero. */}
+          <span className="launcher-mark" aria-hidden="true">
+            Git<span className="launcher-mark-right">
+              <span className="launcher-mark-glide">Right</span>
+            </span>
+          </span>
           <span className="launcher-hint">{copy.openInRightPane}</span>
         </button>
         <p
