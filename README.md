@@ -110,6 +110,10 @@ the [Security Policy](./SECURITY.md) and
 - [Development](./docs/development.md)
 - [Verification](./docs/verification.md)
 
+Documentation is English-only. The English README is the canonical version,
+and the Japanese README is a translation of it. Where they differ, the English
+version prevails.
+
 ## License
 
 GitRight is available under the [MIT License](./LICENSE).

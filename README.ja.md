@@ -73,8 +73,8 @@ codex plugin add gitright@gitright-beta --json
 ![変更ファイルの統合差分を表示している GitRight](./docs/assets/readme-diff-light.png)
 
 コミットを選んだりファイルを閲覧したりしても、会話には何も送られません。明示
-的な引き渡し「コミットSHAを会話で使う」だけが会話に情報を追加し、追加されるの
-は選択したコミットの完全な SHA だけです。
+的な引き渡し（Use commit SHA in conversation）だけが会話に情報を追加し、追加
+されるのは選択したコミットの完全な SHA だけです。
 
 ## トラブルシューティング
 
