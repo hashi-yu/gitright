@@ -1,17 +1,6 @@
-export const GRAPH_METRICS = Object.freeze({
-  rowHeight: 40,
-  lanePitch: 18,
-  lineWidth: 3,
-  casingWidth: 6,
-  // Lane zero sits on the 16px content inset shared with the header text and
-  // the banners; the narrower right inset keeps the accepted 10px gap between
-  // the last lane and the subject column.
-  leftInset: 16,
-  rightInset: 10,
-  railCap: 200,
-  subjectMinimum: 180,
-  curveStrength: 0.65,
-});
+import { GRAPH_METRICS } from "./layout-metrics.ts";
+
+export { GRAPH_METRICS } from "./layout-metrics.ts";
 
 export type GraphCommit = {
   sha: string;

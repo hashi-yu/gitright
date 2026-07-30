@@ -312,7 +312,10 @@ test("production widget keeps one row target, hidden SVG, responsive data, and r
   assert.match(styles, /padding-top:\s*calc\([^;]*--host-safe-area-top/);
   assert.match(styles, /max-height:\s*var\(--host-max-height\)/);
   assert.match(styles, /html\[data-display-mode="fullscreen"\]/);
-  assert.match(styles, /min\(.*200px.*calc\(100% - 180px\)\)/);
+  assert.match(
+    styles,
+    /min\(\s*var\(--gr-graph-rail-cap\),\s*calc\(100% - var\(--gr-subject-minimum\)\)\s*\)/,
+  );
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation:\s*none !important/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*transition:\s*none !important/);
   assert.match(styles, /@keyframes gr-pulse\s*\{/);

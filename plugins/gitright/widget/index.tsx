@@ -29,7 +29,6 @@ import {
   type HostSafeArea,
 } from "./host-environment.ts";
 import {
-  GRAPH_METRICS,
   appendHistoryGraphLayout,
   countOffscreenParents,
   createHistoryGraphLayout,
@@ -39,6 +38,11 @@ import {
   type HistoryGraphLayout,
   type HistoryGraphRow,
 } from "./history-graph.ts";
+import {
+  applyLayoutMetrics,
+  GRAPH_METRICS,
+  LAYOUT_METRICS,
+} from "./layout-metrics.ts";
 import {
   EMPTY_HISTORY_SEARCH_MATCHES,
   matchLoadedHistory,
@@ -1032,7 +1036,9 @@ function HistoryRow({
   const overflowRefCount = inlineRef === null
     ? commit.refs.length
     : commit.refs.length - 1;
-  const nodeColor = row === null ? "var(--gr-text-faint)" : `var(--lane-${row.lane % 8})`;
+  const nodeColor = row === null
+    ? "var(--gr-text-faint)"
+    : `var(--lane-${row.lane % LAYOUT_METRICS.laneColorCount})`;
   const isMergeNode = commit.topologyRole === "merge" ||
     commit.topologyRole === "octopus merge";
   const nodeY = GRAPH_METRICS.rowHeight / 2;
@@ -1123,7 +1129,7 @@ function HistoryRow({
                   <path
                     className="graph-path-color"
                     d={path.d}
-                    stroke={`var(--lane-${path.lane % 8})`}
+                    stroke={`var(--lane-${path.lane % LAYOUT_METRICS.laneColorCount})`}
                     strokeWidth={path.lineWidth}
                     vectorEffect="non-scaling-stroke"
                     data-kind={path.kind}
@@ -1135,14 +1141,18 @@ function HistoryRow({
                 className="graph-node-casing"
                 cx={geometry.nodeX}
                 cy={nodeY}
-                r={selected ? 9.5 : isMergeNode ? 7.5 : 5.5}
+                r={selected
+                  ? LAYOUT_METRICS.node.selectedCasingRadius
+                  : isMergeNode
+                    ? LAYOUT_METRICS.node.mergeCasingRadius
+                    : LAYOUT_METRICS.node.casingRadius}
               />
               {head ? (
                 <circle
                   className="graph-head-halo"
                   cx={geometry.nodeX}
                   cy={nodeY}
-                  r={12.5}
+                  r={LAYOUT_METRICS.node.headHaloRadius}
                 />
               ) : null}
               {selected ? (
@@ -1150,7 +1160,7 @@ function HistoryRow({
                   className="graph-selection-ring"
                   cx={geometry.nodeX}
                   cy={nodeY}
-                  r={8}
+                  r={LAYOUT_METRICS.node.selectionRingRadius}
                 />
               ) : null}
               {isMergeNode ? (
@@ -1158,17 +1168,17 @@ function HistoryRow({
                   className="graph-node"
                   cx={geometry.nodeX}
                   cy={nodeY}
-                  r={4.5}
+                  r={LAYOUT_METRICS.node.mergeRadius}
                   fill="var(--gr-sheet)"
                   stroke={nodeColor}
-                  strokeWidth={2.5}
+                  strokeWidth={LAYOUT_METRICS.node.mergeStrokeWidth}
                 />
               ) : (
                 <circle
                   className="graph-node"
                   cx={geometry.nodeX}
                   cy={nodeY}
-                  r={3.5}
+                  r={LAYOUT_METRICS.node.radius}
                   fill={nodeColor}
                 />
               )}
@@ -1367,7 +1377,7 @@ function HistoryList({
   }, [layout.graphWidth, railWidth, scrollLeft, synchronizeScroll]);
 
   const style = {
-    "--graph-rail-width": `min(${layout.graphWidth}px, ${GRAPH_METRICS.railCap}px, calc(100% - ${GRAPH_METRICS.subjectMinimum}px))`,
+    "--graph-rail-width": `min(${layout.graphWidth}px, var(--gr-graph-rail-cap), calc(100% - var(--gr-subject-minimum)))`,
   } as React.CSSProperties;
   const continuingLaneCount = layout.openLanes.filter(Boolean).length;
 
@@ -1521,7 +1531,9 @@ function SheetDetailSection({
         <span
           className="gr-lane-thread"
           aria-hidden="true"
-          style={{ background: `var(--lane-${laneIndex % 8})` }}
+          style={{
+            background: `var(--lane-${laneIndex % LAYOUT_METRICS.laneColorCount})`,
+          }}
         />
         {subject || copy.noSubject}
       </h2>
@@ -3281,5 +3293,6 @@ function App(): React.ReactElement {
 
 const rootElement = document.getElementById("gitright-root");
 if (!rootElement) throw new Error("GitRight root element is missing");
+applyLayoutMetrics(document.documentElement.style);
 applyHostEnvironment(hostEnvironment());
 createRoot(rootElement).render(<App />);

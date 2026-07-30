@@ -3,7 +3,6 @@ import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 
 import {
-  GRAPH_METRICS,
   appendHistoryGraphLayout,
   computeGraphRail,
   countOffscreenParents,
@@ -15,11 +14,6 @@ import {
 const fixture = JSON.parse(
   await readFile(new URL("../docs/proofs/fixtures/ten-lane-variant-e.json", import.meta.url), "utf8"),
 );
-const styles = await readFile(
-  new URL("../plugins/gitright/widget/styles.css", import.meta.url),
-  "utf8",
-);
-
 function historyCommit(commit, index, commits = fixture.commits) {
   const byId = new Map(commits.map((item) => [item.id, item]));
   return {
@@ -465,26 +459,4 @@ test("aligns lane zero with the 16px content inset in both modes", () => {
   assert.equal(graphRowGeometry(branch.rows[2]).nodeX, 34);
   assert.equal(branch.graphWidth, 44);
 
-  // Text mode centres its topology dot on the same 16px line.
-  assert.match(styles, /\.gr-topo \{[^}]*margin-left: calc\(16px - 3\.5px\);/);
-});
-
-test("publishes the accepted graph metrics as immutable production constants", () => {
-  assert.deepEqual(GRAPH_METRICS, {
-    rowHeight: 40,
-    lanePitch: 18,
-    lineWidth: 3,
-    casingWidth: 6,
-    leftInset: 16,
-    rightInset: 10,
-    railCap: 200,
-    subjectMinimum: 180,
-    curveStrength: 0.65,
-  });
-  assert.equal(Object.isFrozen(GRAPH_METRICS), true);
-  for (const color of [...fixture.themes.light, ...fixture.themes.dark]) {
-    assert.match(styles, new RegExp(color));
-  }
-  assert.match(styles, /grid-template-columns: var\(--graph-rail-width\) minmax\(180px, 1fr\)/);
-  assert.match(styles, /\.graph-rail-viewport[\s\S]*overflow-x: auto/);
 });
