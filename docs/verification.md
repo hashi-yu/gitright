@@ -68,6 +68,9 @@ and dark themes and English and Japanese. Lifecycle cases cover loading, empty,
 unavailable, and error states. Its manifest binds every capture to exact package
 inputs, and the adjacent attestation records human review.
 
+No automated test compares these images; they are the reference for the
+release-time visual review.
+
 If a package input changes, the baseline must be regenerated and reviewed before
 release. Raw host screenshots, personal environment data, and unrelated host
 state are not public verification evidence.
