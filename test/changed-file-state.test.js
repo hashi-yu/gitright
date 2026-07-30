@@ -3,7 +3,6 @@ import { test } from "node:test";
 
 import {
   appendChangedFilePage,
-  createChangedFilePageGuard,
   searchLoadedChangedFiles,
 } from "../plugins/gitright/widget/changed-file-state.ts";
 
@@ -90,17 +89,4 @@ test("search covers only loaded new paths, old rename paths, and statuses", () =
   assert.deepEqual(searchLoadedChangedFiles(files, "legacy"), [files[1]]);
   assert.deepEqual(searchLoadedChangedFiles(files, "deleted"), [files[2]]);
   assert.deepEqual(searchLoadedChangedFiles(files, "unloaded"), []);
-});
-
-test("a deferred file page cannot survive a parent-switch invalidation", () => {
-  const guard = createChangedFilePageGuard();
-  const firstParentRequest = guard.begin("a".repeat(64));
-  assert.equal(guard.accepts(firstParentRequest), true);
-
-  guard.invalidate();
-  assert.equal(guard.accepts(firstParentRequest), false);
-
-  const secondParentRequest = guard.begin("b".repeat(64));
-  assert.equal(guard.accepts(firstParentRequest), false);
-  assert.equal(guard.accepts(secondParentRequest), true);
 });

@@ -4,7 +4,7 @@
  * host user's environment, so the supported-platform layout `/Users/<name>`
  * is matched structurally; other paths pass through unchanged.
  */
-export function abbreviateHomePath(path: string): string {
+function abbreviateHomePath(path: string): string {
   const home = /^\/Users\/[^/]+(?=\/|$)/.exec(path);
   return home ? `~${path.slice(home[0].length)}` : path;
 }

@@ -10,7 +10,6 @@ the repository attached to a Codex task, rendered in the Codex right pane.
 - `plugins/gitright/widget/` — widget source and its esbuild build script.
 - `plugins/gitright/dist/` — installable payload; ignored on `main`, committed
   on release refs only.
-- `src/history.js` — shared history logic.
 - `test/` — the public test suite (`node --test`).
 - `test-support/` — test orchestration helpers.
 - `docs/` — architecture, compatibility, development, and verification guides.

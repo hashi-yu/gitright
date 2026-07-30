@@ -1,22 +1,26 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  abbreviateHomePath,
-  statusBarItems,
-} from "../plugins/gitright/widget/status-bar.ts";
+import { statusBarItems } from "../plugins/gitright/widget/status-bar.ts";
+
+function pathItemValue(path) {
+  return statusBarItems(
+    { path, branch: "main", worktreeName: null },
+    "HEAD (detached)",
+  )[0].value;
+}
 
 test("abbreviates only a macOS home-directory prefix to ~", () => {
   assert.equal(
-    abbreviateHomePath("/Users/example/Documents/gitright"),
+    pathItemValue("/Users/example/Documents/gitright"),
     "~/Documents/gitright",
   );
-  assert.equal(abbreviateHomePath("/Users/example"), "~");
-  assert.equal(abbreviateHomePath("/Users"), "/Users");
-  assert.equal(abbreviateHomePath("/opt/repositories/codex_git"), "/opt/repositories/codex_git");
-  assert.equal(abbreviateHomePath("/Usersland/repo"), "/Usersland/repo");
+  assert.equal(pathItemValue("/Users/example"), "~");
+  assert.equal(pathItemValue("/Users"), "/Users");
+  assert.equal(pathItemValue("/opt/repositories/codex_git"), "/opt/repositories/codex_git");
+  assert.equal(pathItemValue("/Usersland/repo"), "/Usersland/repo");
   assert.equal(
-    abbreviateHomePath("/Users/名前/プロジェクト"),
+    pathItemValue("/Users/名前/プロジェクト"),
     "~/プロジェクト",
   );
 });

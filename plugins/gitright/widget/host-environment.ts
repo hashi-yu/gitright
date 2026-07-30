@@ -1,5 +1,6 @@
 import { resolveLocale, type GitRightLocale } from "./localization.ts";
-import type { DisplayMode } from "./launcher-state.ts";
+
+export type DisplayMode = "inline" | "fullscreen" | "pip";
 
 export type HostSafeArea = {
   top: number;
