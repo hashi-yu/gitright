@@ -650,7 +650,9 @@ html[data-display-mode="fullscreen"] main.gitright-app {
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  justify-self: center;
+  /* Centred on the 16px content inset, matching graph lane zero. */
+  justify-self: start;
+  margin-left: calc(16px - 3.5px);
   background: var(--gr-text-faint);
 }
 
