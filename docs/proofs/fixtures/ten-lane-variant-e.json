@@ -8,7 +8,8 @@
     "lanePitch": 18,
     "lineWidth": 3,
     "casingWidth": 6,
-    "metricPadding": 10,
+    "leftInset": 16,
+    "rightInset": 10,
     "rowHeight": 40,
     "curveStrength": 0.65
   },
@@ -1213,7 +1214,7 @@
     "maximumOccupiedLaneCount": 11,
     "maximumLaneIndex": 10,
     "laneCount": 11,
-    "graphWidth": 200,
+    "graphWidth": 206,
     "openLanes": []
   },
   "invariants": {
@@ -1250,8 +1251,8 @@
       "reusedBy": "branch7"
     },
     "directParentConnections": 32,
-    "graphWidth": 200,
+    "graphWidth": 206,
     "subjectWidth": 180,
-    "horizontalGraphOverflow": false
+    "horizontalGraphOverflow": true
   }
 }
