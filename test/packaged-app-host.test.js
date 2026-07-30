@@ -1090,6 +1090,173 @@ test("packaged app abandons a canceled pane entrance instead of staying hidden",
   }
 });
 
+test("packaged app paints its surfaces with the host's own surface color", async () => {
+  const repository = await createRepository({ commitCount: 3 });
+  const entranceState = {
+    version: 1,
+    mode: "graph",
+    query: "",
+    selectedSha: null,
+    launcherHandoff: true,
+  };
+  const surfaces = (host, selectors) =>
+    host.widget.locator("html").evaluate((_, list) =>
+      Object.fromEntries(list.map((selector) => [
+        selector,
+        getComputedStyle(document.querySelector(selector)).backgroundColor,
+      ])), selectors);
+
+  // The pane, its arriving card, and every surface derived from the same
+  // token follow the host from the very first frame — there is no
+  // handover, so no frame of the entrance shows a color the host did not
+  // pick. The dark value stands in for a dark host.
+  for (const surfaceBackgroundColor of ["rgb(33, 33, 38)", "rgb(255, 255, 255)"]) {
+    const host = await startPackagedAppHost({
+      trustedRepositoryContext: repository,
+      viewport: { width: 380, height: 900 },
+      hostContext: { displayMode: "fullscreen", surfaceBackgroundColor },
+      widgetState: entranceState,
+      reducedMotion: "no-preference",
+    });
+    try {
+      await host.widget.locator("main.gr-entrance").waitFor();
+      assert.deepEqual(
+        await surfaces(host, ["main.gitright-app", ".gr-entrance-card"]),
+        {
+          "main.gitright-app": surfaceBackgroundColor,
+          ".gr-entrance-card": surfaceBackgroundColor,
+        },
+      );
+      // It stays there: nothing later in the choreography repaints it.
+      await host.widget.locator("main:not(.gr-entrance)").waitFor({ timeout: 8000 });
+      assert.deepEqual(
+        await surfaces(host, ["main.gitright-app"]),
+        { "main.gitright-app": surfaceBackgroundColor },
+      );
+    } finally {
+      await host.close();
+    }
+  }
+
+  // The inline launcher's card follows the same token, so it sits on the
+  // conversation's own color rather than on a near-match.
+  const inlineHost = await startPackagedAppHost({
+    trustedRepositoryContext: repository,
+    viewport: { width: 760, height: 300 },
+    hostContext: {
+      displayMode: "inline",
+      maxHeight: 300,
+      surfaceBackgroundColor: "rgb(33, 33, 38)",
+    },
+    reducedMotion: "no-preference",
+  });
+  try {
+    await inlineHost.widget.getByRole("button", { name: "Open GitRight" }).waitFor();
+    assert.deepEqual(
+      await surfaces(inlineHost, [".launcher-action"]),
+      { ".launcher-action": "rgb(33, 33, 38)" },
+    );
+  } finally {
+    await inlineHost.close();
+  }
+
+  // A host that publishes nothing gets GitRight's own token, which is
+  // what the deterministic captures render against.
+  const plainHost = await startPackagedAppHost({
+    trustedRepositoryContext: repository,
+    viewport: { width: 380, height: 900 },
+    hostContext: { displayMode: "fullscreen" },
+    widgetState: entranceState,
+    reducedMotion: "no-preference",
+  });
+  try {
+    await plainHost.widget.locator("main.gr-entrance").waitFor();
+    assert.deepEqual(
+      await surfaces(plainHost, ["main.gitright-app", ".gr-entrance-card"]),
+      {
+        "main.gitright-app": "rgb(242, 243, 247)",
+        ".gr-entrance-card": "rgb(242, 243, 247)",
+      },
+    );
+  } finally {
+    await plainHost.close();
+  }
+});
+
+test("packaged app opens the pane from the launcher card's exit, not a timer", async () => {
+  const repository = await createRepository({ commitCount: 3 });
+  const host = await startPackagedAppHost({
+    trustedRepositoryContext: repository,
+    viewport: { width: 380, height: 900 },
+    hostContext: { displayMode: "inline", maxHeight: 900 },
+    displayModeRequest: { outcome: "resolve", mode: "fullscreen" },
+    reducedMotion: "no-preference",
+  });
+  try {
+    // Stretch the exit so the request cannot slip through on its own
+    // schedule while the assertion below is being taken.
+    await host.widget.locator("html").evaluate(() => {
+      const style = document.createElement("style");
+      style.textContent =
+        ".launcher-requesting .launcher-action { animation-duration: 60s !important; }";
+      document.head.append(style);
+    });
+    await host.widget.getByRole("button", { name: "Open GitRight" }).click();
+    await host.widget.locator("main.launcher-requesting").waitFor();
+    // The host closes the inline frame the moment the pane opens, so the
+    // card has to finish leaving before the request goes out.
+    assert.equal(await host.widget.locator("html").getAttribute("data-display-mode"), "inline");
+    assert.equal(await host.widget.getByRole("heading", { name: "Graph topology" }).count(), 0);
+
+    // The card leaves through the frame's right edge rather than
+    // dissolving in place: it stays fully opaque the whole way, and its
+    // trailing edge ends up past the edge that clips it.
+    const departure = await host.widget.locator("html").evaluate(() => {
+      const card = document.querySelector(".launcher-action");
+      const sample = () => {
+        const style = getComputedStyle(card);
+        const bounds = card.getBoundingClientRect();
+        const frame = document.querySelector(".launcher").getBoundingClientRect();
+        return {
+          opacity: Number(style.opacity),
+          leftBeyondFrame: Math.round(bounds.left - frame.right),
+        };
+      };
+      const exit = document.getAnimations()
+        .find((animation) => animation.animationName === "launcher-exit");
+      const samples = [];
+      for (const fraction of [0, 0.5, 0.999]) {
+        exit.currentTime = exit.effect.getTiming().duration * fraction;
+        samples.push(sample());
+      }
+      return samples;
+    });
+    assert.deepEqual(departure.map(({ opacity }) => opacity), [1, 1, 1]);
+    assert.ok(
+      departure[0].leftBeyondFrame < 0,
+      "the card did not start inside the frame",
+    );
+    assert.ok(
+      departure.at(-1).leftBeyondFrame >= 0,
+      `the card stopped short of the frame's right edge (${departure.at(-1).leftBeyondFrame}px)`,
+    );
+
+    const finished = await host.widget.locator("html").evaluate(() =>
+      document.getAnimations()
+        .filter((animation) => animation.animationName === "launcher-exit")
+        .map((animation) => {
+          animation.finish();
+          return animation.animationName;
+        })
+    );
+    assert.deepEqual(finished, ["launcher-exit"]);
+    await host.widget.getByRole("heading", { name: "Graph topology" }).waitFor();
+    assert.equal(await host.widget.locator("html").getAttribute("data-display-mode"), "fullscreen");
+  } finally {
+    await host.close();
+  }
+});
+
 test("packaged app keeps long changed-file rows inside the supported 380px viewport", async () => {
   const repository = await createRepository({ includeLongChangedFilePath: true });
   const fullPath =
