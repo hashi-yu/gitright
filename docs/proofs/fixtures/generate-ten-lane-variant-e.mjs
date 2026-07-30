@@ -17,7 +17,8 @@ const METRICS = Object.freeze({
   lanePitch: 18,
   lineWidth: 3,
   casingWidth: 6,
-  metricPadding: 10,
+  leftInset: 16,
+  rightInset: 10,
   rowHeight: 40,
   curveStrength: 0.65,
 });
@@ -288,7 +289,10 @@ function deriveLayout(commitsBySha, historyOrder, headSha) {
     maximumOccupiedLaneCount,
     maximumLaneIndex,
     laneCount: maximumLaneIndex + 1,
-    graphWidth: METRICS.metricPadding * 2 + METRICS.lanePitch * Math.max(0, maximumLaneIndex),
+    graphWidth:
+      METRICS.leftInset +
+      METRICS.rightInset +
+      METRICS.lanePitch * Math.max(0, maximumLaneIndex),
     openLanes: [...slots],
   };
 }
@@ -371,8 +375,12 @@ function validate(commitsBySha, historyOrder, layout) {
   assert.equal(routeCount, edgeCount, "every direct parent relationship must have one route");
 
   const graphWidth = layout.graphWidth;
-  const subjectWidth = METRICS.paneWidth - graphWidth;
-  assert.ok(graphWidth <= METRICS.railCap, "graph rail must stay within 200 CSS px");
+  const railWidth = Math.max(
+    0,
+    Math.min(graphWidth, METRICS.railCap, METRICS.paneWidth - METRICS.subjectMinimum),
+  );
+  const subjectWidth = METRICS.paneWidth - railWidth;
+  assert.ok(railWidth <= METRICS.railCap, "graph rail must stay within 200 CSS px");
   assert.ok(subjectWidth >= METRICS.subjectMinimum, "subject must retain at least 180 CSS px");
 
   return {
@@ -396,7 +404,7 @@ function validate(commitsBySha, historyOrder, layout) {
     directParentConnections: edgeCount,
     graphWidth,
     subjectWidth,
-    horizontalGraphOverflow: false,
+    horizontalGraphOverflow: graphWidth > railWidth,
   };
 }
 
