@@ -18,10 +18,9 @@ import {
 
 import {
   appendChangedFilePage,
-  createChangedFilePageGuard,
   searchLoadedChangedFiles,
 } from "./changed-file-state.ts";
-import { createFileDiffRequestGuard } from "./file-diff-state.ts";
+import { createRequestGuard } from "./request-guard.ts";
 import {
   hostEnvironmentPresentation,
   resolveHostEnvironment,
@@ -2078,8 +2077,8 @@ function GitRightView({
   const handoffInFlight = useRef(false);
   const selectedShaRef = useRef<string | null>(selectedSha);
   const [refreshGuard] = useState(createHistoryRefreshGuard);
-  const [changedFilePageGuard] = useState(createChangedFilePageGuard);
-  const [fileDiffRequestGuard] = useState(createFileDiffRequestGuard);
+  const [changedFilePageGuard] = useState(createRequestGuard);
+  const [fileDiffRequestGuard] = useState(createRequestGuard);
   const historySnapshotId = history.status === "ready" ? history.snapshotId : null;
   const selectedCommitIsLoaded = history.status === "ready" && selectedSha !== null
     ? history.commits.some((commit) => commit.sha === selectedSha)
@@ -2455,7 +2454,9 @@ function GitRightView({
     } else {
       diffSwitchDirection.current = null;
     }
-    const requestToken = fileDiffRequestGuard.begin(commitDetail.detailId, file.fileId);
+    const requestedDetailId = commitDetail.detailId;
+    const requestedFileId = file.fileId;
+    const requestToken = fileDiffRequestGuard.begin(requestedDetailId, requestedFileId);
     setSelectedFileId(file.fileId);
     setFileDiff(null);
     setDiffNotice(null);
@@ -2474,15 +2475,15 @@ function GitRightView({
       const structuredContent = restoreOmittedFileDiffNulls(result?.structuredContent);
       if (
         isFileDiff(structuredContent) &&
-        structuredContent.detailId === requestToken.detailId &&
-        structuredContent.fileId === requestToken.fileId
+        structuredContent.detailId === requestedDetailId &&
+        structuredContent.fileId === requestedFileId
       ) {
         setFileDiff(structuredContent);
         setDiffNotice(null);
       } else if (
         isFileDiffError(structuredContent) &&
-        structuredContent.detailId === requestToken.detailId &&
-        structuredContent.fileId === requestToken.fileId
+        structuredContent.detailId === requestedDetailId &&
+        structuredContent.fileId === requestedFileId
       ) {
         setDiffNotice({
           message: structuredContent.message,

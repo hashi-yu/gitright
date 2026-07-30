@@ -33,30 +33,6 @@ export type AppendChangedFilePageResult<TFile extends ChangedFileStateEntry> =
       detail: ChangedFileStateDetail<TFile>;
     };
 
-export type ChangedFilePageRequestToken = {
-  detailId: string;
-  generation: number;
-};
-
-export function createChangedFilePageGuard() {
-  let generation = 0;
-  let activeDetailId: string | null = null;
-  return {
-    begin(detailId: string): ChangedFilePageRequestToken {
-      generation += 1;
-      activeDetailId = detailId;
-      return { detailId, generation };
-    },
-    invalidate(): void {
-      generation += 1;
-      activeDetailId = null;
-    },
-    accepts(token: ChangedFilePageRequestToken): boolean {
-      return token.generation === generation && token.detailId === activeDetailId;
-    },
-  };
-}
-
 function invalidPage<TFile extends ChangedFileStateEntry>(
   detail: ChangedFileStateDetail<TFile>,
 ): AppendChangedFilePageResult<TFile> {
