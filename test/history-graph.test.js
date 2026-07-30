@@ -70,7 +70,7 @@ test("derives the accepted ten-lane Variant E placement only from SHAs, parents,
   assert.equal(layout.rows.length, 21);
   assert.equal(layout.maximumOccupiedLaneCount, 11);
   assert.equal(layout.laneCount, 11);
-  assert.equal(layout.graphWidth, 200);
+  assert.equal(layout.graphWidth, 206);
   assert.equal(layout.rows.flatMap((row) => row.routes).length, 32);
   assert.deepEqual(layout.openLanes, []);
 
@@ -311,8 +311,8 @@ test("holds a branch lane to its first parent and mirrors the fork with a conver
   assert.deepEqual(
     mergeGeometry.paths.filter((path) => path.kind === "parent-route").map((path) => path.d),
     [
-      "M 10 20 C 10 34 28 28 28 40",
-      "M 10 20 C 10 32 10 26 10 40",
+      "M 16 20 C 16 34 34 28 34 40",
+      "M 16 20 C 16 32 16 26 16 40",
     ],
     "0.65-strength fork curves stay inside the lower half of the child row",
   );
@@ -353,19 +353,19 @@ test("holds a branch lane to its first parent and mirrors the fork with a conver
         kind: "vertical",
         lane: 0,
         parentIndex: null,
-        d: "M 10 0 L 10 20",
+        d: "M 16 0 L 16 20",
       },
       {
         kind: "parent-route",
         lane: 1,
         parentIndex: null,
-        d: "M 28 0 C 28 13 10 7 10 20",
+        d: "M 34 0 C 34 13 16 7 16 20",
       },
       {
         kind: "parent-route",
         lane: 0,
         parentIndex: 0,
-        d: "M 10 20 C 10 33 10 27 10 40",
+        d: "M 16 20 C 16 33 16 27 16 40",
       },
     ],
     "the held branch enters the parent node through the upper-half mirror curve",
@@ -390,7 +390,7 @@ test("draws only real vertical intervals at roots and independently introduced t
   );
   assert.equal(
     graphRowGeometry(linear.rows[1]).paths.find((path) => path.kind === "vertical").d,
-    "M 10 0 L 10 20",
+    "M 16 0 L 16 20",
     "an existing lane stops at its commit node before the next parent route",
   );
 
@@ -415,6 +415,15 @@ test("keeps the metro fixture within the 380px rail cap and confines wider topol
     graphWidth: 200,
     overflows: false,
   });
+  // With lane zero on the 16px content inset the ten-lane fixture reaches
+  // 206px, so the widest accepted topology scrolls inside the capped rail.
+  assert.deepEqual(computeGraphRail(380, 206), {
+    paneWidth: 380,
+    railWidth: 200,
+    subjectWidth: 180,
+    graphWidth: 206,
+    overflows: true,
+  });
   assert.deepEqual(computeGraphRail(380, 236), {
     paneWidth: 380,
     railWidth: 200,
@@ -426,7 +435,7 @@ test("keeps the metro fixture within the 380px rail cap and confines wider topol
 
 test("reveals a selected lane minimally and counts hidden direct parents by direction", () => {
   assert.equal(minimumLaneReveal(40, 100, 48), 40);
-  assert.equal(minimumLaneReveal(40, 100, 24), 14);
+  assert.equal(minimumLaneReveal(40, 100, 24), 8);
   assert.equal(minimumLaneReveal(40, 100, 154), 64);
   assert.equal(minimumLaneReveal(40, 100, 154, 200), 64);
 
@@ -439,13 +448,35 @@ test("reveals a selected lane minimally and counts hidden direct parents by dire
   );
 });
 
+test("aligns lane zero with the 16px content inset in both modes", () => {
+  const tip = createHistoryGraphLayout([simpleCommit(2, [1], { head: true }), simpleCommit(1)]);
+  assert.equal(graphRowGeometry(tip.rows[0]).nodeX, 16, "lane zero sits on the content inset");
+  assert.equal(createHistoryGraphLayout([simpleCommit(1)]).graphWidth, 26);
+
+  const branch = createHistoryGraphLayout([
+    simpleCommit(5, [4, 3], { head: true }),
+    simpleCommit(4, [2]),
+    simpleCommit(3, [2]),
+    simpleCommit(2, [1]),
+    simpleCommit(1),
+  ]);
+  // The lane pitch and the 10px gap between the last lane and the subject
+  // stay as accepted: only the left inset grows.
+  assert.equal(graphRowGeometry(branch.rows[2]).nodeX, 34);
+  assert.equal(branch.graphWidth, 44);
+
+  // Text mode centres its topology dot on the same 16px line.
+  assert.match(styles, /\.gr-topo \{[^}]*margin-left: calc\(16px - 3\.5px\);/);
+});
+
 test("publishes the accepted graph metrics as immutable production constants", () => {
   assert.deepEqual(GRAPH_METRICS, {
     rowHeight: 40,
     lanePitch: 18,
     lineWidth: 3,
     casingWidth: 6,
-    metricPadding: 10,
+    leftInset: 16,
+    rightInset: 10,
     railCap: 200,
     subjectMinimum: 180,
     curveStrength: 0.65,

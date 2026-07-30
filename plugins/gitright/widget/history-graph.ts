@@ -3,7 +3,11 @@ export const GRAPH_METRICS = Object.freeze({
   lanePitch: 18,
   lineWidth: 3,
   casingWidth: 6,
-  metricPadding: 10,
+  // Lane zero sits on the 16px content inset shared with the header text and
+  // the banners; the narrower right inset keeps the accepted 10px gap between
+  // the last lane and the subject column.
+  leftInset: 16,
+  rightInset: 10,
   railCap: 200,
   subjectMinimum: 180,
   curveStrength: 0.65,
@@ -63,12 +67,12 @@ export type GraphRowGeometry = {
 };
 
 function laneX(lane: number): number {
-  return GRAPH_METRICS.metricPadding + lane * GRAPH_METRICS.lanePitch;
+  return GRAPH_METRICS.leftInset + lane * GRAPH_METRICS.lanePitch;
 }
 
 function graphWidth(maximumLaneIndex: number): number {
   return (
-    GRAPH_METRICS.metricPadding * 2 +
+    GRAPH_METRICS.leftInset + GRAPH_METRICS.rightInset +
     Math.max(0, maximumLaneIndex) * GRAPH_METRICS.lanePitch
   );
 }
@@ -341,10 +345,12 @@ export function minimumLaneReveal(
   graphContentWidth = Number.POSITIVE_INFINITY,
 ): number {
   let next = scrollLeft;
+  // Reveal the lane together with the inset on the side it entered from, so
+  // scrolling back to lane zero lands on the left edge of the rail.
   if (position < scrollLeft) {
-    next = position - GRAPH_METRICS.metricPadding;
+    next = position - GRAPH_METRICS.leftInset;
   } else if (position > scrollLeft + railWidth) {
-    next = position + GRAPH_METRICS.metricPadding - railWidth;
+    next = position + GRAPH_METRICS.rightInset - railWidth;
   }
   const maximum = Math.max(0, graphContentWidth - railWidth);
   return Math.min(Math.max(0, next), maximum);
