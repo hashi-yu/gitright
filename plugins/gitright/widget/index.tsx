@@ -34,10 +34,10 @@ import {
   createHistoryGraphLayout,
   graphLaneX,
   graphRowGeometry,
-  minimumLaneReveal,
   type HistoryGraphLayout,
   type HistoryGraphRow,
 } from "./history-graph.ts";
+import { createGraphRailController } from "./graph-rail-controller.ts";
 import {
   applyLayoutMetrics,
   GRAPH_METRICS,
@@ -1300,49 +1300,35 @@ function HistoryList({
   onStepSelection: (commit: HistoryCommit, delta: 1 | -1) => void;
   onLoadMore: () => void;
 }): React.ReactElement {
-  const railElements = useRef(new Map<string, HTMLDivElement>());
-  const scrollLeftRef = useRef(scrollLeft);
   const revealedSelectionRef = useRef<string | null>(selectedSha);
   const [railWidth, setRailWidth] = useState(
     Math.min(layout.graphWidth, GRAPH_METRICS.railCap),
   );
+  const onScrollLeftChangeRef = useRef(onScrollLeftChange);
+  useEffect(() => {
+    onScrollLeftChangeRef.current = onScrollLeftChange;
+  }, [onScrollLeftChange]);
+  const [controller] = useState(() => createGraphRailController({
+    graphWidth: layout.graphWidth,
+    scrollLeft,
+    onScrollLeftChange: (next) => onScrollLeftChangeRef.current(next),
+    onRailWidthChange: setRailWidth,
+  }));
   const rowBySha = useMemo(
     () => new Map(layout.rows.map((row) => [row.sha, row])),
     [layout],
   );
-  const registerRail = useCallback((sha: string, element: HTMLDivElement | null) => {
-    if (element) {
-      railElements.current.set(sha, element);
-      element.scrollLeft = scrollLeftRef.current;
-      if (element.clientWidth > 0) setRailWidth(element.clientWidth);
-    } else {
-      railElements.current.delete(sha);
-    }
-  }, []);
+  useEffect(() => {
+    controller.setGraphWidth(layout.graphWidth);
+  }, [controller, layout.graphWidth]);
 
   useEffect(() => {
-    scrollLeftRef.current = scrollLeft;
-    for (const element of railElements.current.values()) {
-      if (element.scrollLeft !== scrollLeft) element.scrollLeft = scrollLeft;
-    }
-  }, [scrollLeft]);
-
-  const synchronizeScroll = useCallback((next: number, source?: HTMLDivElement) => {
-    const maximum = Math.max(0, layout.graphWidth - railWidth);
-    const clamped = Math.min(Math.max(0, next), maximum);
-    for (const element of railElements.current.values()) {
-      if (element !== source && element.scrollLeft !== clamped) element.scrollLeft = clamped;
-    }
-    if (source && source.scrollLeft !== clamped) source.scrollLeft = clamped;
-    onScrollLeftChange(clamped);
-  }, [layout.graphWidth, onScrollLeftChange, railWidth]);
+    controller.setScrollLeft(scrollLeft);
+  }, [controller, scrollLeft]);
 
   const onRailScroll = useCallback((source: HTMLDivElement) => {
-    synchronizeScroll(source.scrollLeft, source);
-    if (source.clientWidth > 0 && source.clientWidth !== railWidth) {
-      setRailWidth(source.clientWidth);
-    }
-  }, [railWidth, synchronizeScroll]);
+    controller.scrollTo(source.scrollLeft, source);
+  }, [controller]);
 
   useEffect(() => {
     if (selectedSha === revealedSelectionRef.current) return;
@@ -1350,31 +1336,15 @@ function HistoryList({
     if (!selectedSha) return;
     const row = rowBySha.get(selectedSha);
     if (!row) return;
-    synchronizeScroll(
-      minimumLaneReveal(scrollLeft, railWidth, graphLaneX(row.lane), layout.graphWidth),
-    );
-  }, [
-    layout.graphWidth,
-    railWidth,
-    rowBySha,
-    scrollLeft,
-    selectedSha,
-    synchronizeScroll,
-  ]);
+    controller.revealLane(graphLaneX(row.lane));
+  }, [controller, rowBySha, selectedSha]);
 
   const revealParent = useCallback((direction: "left" | "right", row: HistoryGraphRow) => {
-    const candidates = row.routes
-      .map((route) => graphLaneX(route.parentLane))
-      .filter((position) => direction === "left"
-        ? position < scrollLeft
-        : position > scrollLeft + railWidth)
-      .sort((left, right) => left - right);
-    const position = direction === "left" ? candidates.at(-1) : candidates[0];
-    if (position === undefined) return;
-    synchronizeScroll(
-      minimumLaneReveal(scrollLeft, railWidth, position, layout.graphWidth),
+    controller.revealParent(
+      direction,
+      row.routes.map((route) => graphLaneX(route.parentLane)),
     );
-  }, [layout.graphWidth, railWidth, scrollLeft, synchronizeScroll]);
+  }, [controller]);
 
   const style = {
     "--graph-rail-width": `min(${layout.graphWidth}px, var(--gr-graph-rail-cap), calc(100% - var(--gr-subject-minimum)))`,
@@ -1407,7 +1377,7 @@ function HistoryList({
             currentMatch={currentMatchSha === commit.sha}
             query={query}
             loadedShas={loadedShas}
-            registerRail={registerRail}
+            registerRail={controller.register}
             onRailScroll={onRailScroll}
             onRevealParent={revealParent}
             onSelect={onSelect}
