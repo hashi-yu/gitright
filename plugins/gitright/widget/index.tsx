@@ -3,12 +3,7 @@ import "./styles.css";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
-import {
-  beginCommitDetailLoad,
-  commitDetailMatchesSelection,
-  failCommitDetailLoad,
-  finishCommitDetailLoad,
-} from "./commit-detail-state.ts";
+import { commitDetailMatchesSelection } from "./commit-detail-state.ts";
 import {
   restoreOmittedChangedFilePageNulls,
   restoreOmittedCommitDetailNulls,
@@ -28,12 +23,9 @@ import {
 } from "./changed-file-state.ts";
 import { createFileDiffRequestGuard } from "./file-diff-state.ts";
 import {
-  createHistoryPresentation,
-  updateHistoryPresentation,
-} from "./history-detail-navigation.ts";
-import {
   hostEnvironmentPresentation,
   resolveHostEnvironment,
+  type DisplayMode,
   type HostEnvironment,
   type HostSafeArea,
 } from "./host-environment.ts";
@@ -71,12 +63,6 @@ import {
   replaceHistorySnapshot,
   type HistoryStateSelection,
 } from "./history-state.ts";
-import {
-  resolveLauncherOutcome,
-  type DisplayMode,
-  type LauncherRequestOutcome,
-  type LauncherStatus,
-} from "./launcher-state.ts";
 import { statusBarItems } from "./status-bar.ts";
 import {
   createToolResultStore,
@@ -89,10 +75,6 @@ import {
   truncateWidgetStateQuery,
   type PersistedWidgetState,
 } from "./widget-state.ts";
-import {
-  formatViewportMetrics,
-  isViewportMetricsShortcut,
-} from "./viewport-metrics.ts";
 
 const DETAIL_REQUEST_DEBOUNCE_MS = 150;
 const FILE_SEARCH_MINIMUM_ENTRIES = 6;
@@ -2082,9 +2064,9 @@ function GitRightView({
   const [handoffStatus, setHandoffStatus] =
     useState<"idle" | "sending" | "sent" | "failed">("idle");
   const [historyPresentation, setHistoryPresentation] = useState(() => ({
-    ...createHistoryPresentation(),
     query: restoredWidgetState.query,
     topologyMode: restoredWidgetState.mode,
+    graphScrollLeft: 0,
   }));
   const [matchCursor, setMatchCursor] = useState(0);
   const [widgetStateReady, setWidgetStateReady] = useState(false);
@@ -2339,9 +2321,8 @@ function GitRightView({
     }
     const requestId = ++detailRequestId.current;
     const retainedDetail = commitDetail;
-    const pending = beginCommitDetailLoad(retainedDetail);
-    setCommitDetail(pending.detail);
-    setDetailNotice(pending.notice);
+    setCommitDetail(retainedDetail);
+    setDetailNotice(null);
     setDetailLoading(true);
     const snapshotId = historySnapshotId;
     const sha = selectedSha;
@@ -2351,13 +2332,11 @@ function GitRightView({
         const loaded = await loadCommitDetail(snapshotId, sha, parentIndex);
         if (detailRequestId.current !== requestId) return;
         if (loaded.status === "ready") {
-          const completed = finishCommitDetailLoad(loaded.detail);
-          setCommitDetail(completed.detail);
-          setDetailNotice(completed.notice);
+          setCommitDetail(loaded.detail);
+          setDetailNotice(null);
         } else {
-          const failed = failCommitDetailLoad(retainedDetail, loaded.message);
-          setCommitDetail(failed.detail);
-          setDetailNotice(failed.notice);
+          setCommitDetail(retainedDetail);
+          setDetailNotice(loaded.message);
         }
         setDetailLoading(false);
       })();
@@ -2824,9 +2803,7 @@ function GitRightView({
               // Read the value before the state updater runs: React detaches
               // event.currentTarget once the handler returns.
               const query = truncateWidgetStateQuery(event.currentTarget.value);
-              setHistoryPresentation((current) =>
-                updateHistoryPresentation(current, { query })
-              );
+              setHistoryPresentation((current) => ({ ...current, query }));
             }}
             onKeyDown={(event) => {
               if (event.key !== "Enter") return;
@@ -2868,9 +2845,10 @@ function GitRightView({
             aria-pressed={topologyMode === "graph"}
             aria-label={copy.graph}
             title={copy.graph}
-            onClick={() => setHistoryPresentation((current) =>
-              updateHistoryPresentation(current, { topologyMode: "graph" })
-            )}
+            onClick={() => setHistoryPresentation((current) => ({
+              ...current,
+              topologyMode: "graph",
+            }))}
           >
             <GraphIcon />
           </button>
@@ -2879,9 +2857,10 @@ function GitRightView({
             aria-pressed={topologyMode === "text"}
             aria-label={copy.text}
             title={copy.text}
-            onClick={() => setHistoryPresentation((current) =>
-              updateHistoryPresentation(current, { topologyMode: "text" })
-            )}
+            onClick={() => setHistoryPresentation((current) => ({
+              ...current,
+              topologyMode: "text",
+            }))}
           >
             <TextIcon />
           </button>
@@ -2942,9 +2921,10 @@ function GitRightView({
               loadingMore={loadingMore}
               paginationBlocked={paginationBlocked}
               copy={copy}
-              onScrollLeftChange={(scrollLeft) => setHistoryPresentation((current) =>
-                updateHistoryPresentation(current, { graphScrollLeft: scrollLeft })
-              )}
+              onScrollLeftChange={(scrollLeft) => setHistoryPresentation((current) => ({
+                ...current,
+                graphScrollLeft: scrollLeft,
+              }))}
               onSelect={selectCommit}
               onStepSelection={stepSelection}
               onLoadMore={() => void loadMore()}
@@ -3037,6 +3017,20 @@ function GitRightView({
   );
 }
 
+function formatViewportMetrics(width: number, height: number): string {
+  const support = width < 380
+    ? "below 380px support"
+    : width === 380
+      ? "supported minimum"
+      : "supported width";
+  return `${width} × ${height} CSS px · ${support}`;
+}
+
+function isViewportMetricsShortcut(event: KeyboardEvent): boolean {
+  return !event.repeat && event.ctrlKey && event.altKey && event.shiftKey && !event.metaKey &&
+    event.code === "KeyW";
+}
+
 function DeveloperViewportMetrics(): React.ReactElement | null {
   const [visible, setVisible] = useState(false);
   const [label, setLabel] = useState("");
@@ -3095,6 +3089,33 @@ function persistLauncherHandoff(pending: boolean): void {
   } catch {
     /* Best effort: without the marker the pane just skips the entrance. */
   }
+}
+
+type LauncherStatus = "idle" | "requesting" | "unavailable" | "failed" | "unsupported";
+
+type LauncherRequestOutcome =
+  | { kind: "missing" }
+  | { kind: "rejected" }
+  | { kind: "thrown" }
+  | { kind: "undefined" }
+  | { kind: "resolved"; mode: DisplayMode };
+
+type LauncherTransition = {
+  showCompleteView: boolean;
+  status: Exclude<LauncherStatus, "requesting">;
+};
+
+function resolveLauncherOutcome(outcome: LauncherRequestOutcome): LauncherTransition {
+  if (outcome.kind === "resolved" && outcome.mode === "fullscreen") {
+    return { showCompleteView: true, status: "idle" };
+  }
+  if (outcome.kind === "missing") {
+    return { showCompleteView: false, status: "unavailable" };
+  }
+  if (outcome.kind === "rejected" || outcome.kind === "thrown") {
+    return { showCompleteView: false, status: "failed" };
+  }
+  return { showCompleteView: false, status: "unsupported" };
 }
 
 function App(): React.ReactElement {
