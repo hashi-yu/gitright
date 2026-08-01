@@ -3,10 +3,10 @@ import { existsSync } from "node:fs";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createInterface } from "node:readline";
 
 import { chromium } from "playwright-core";
 
+import { createMcpClient } from "./mcp-client.js";
 import { pluginRoot } from "./plugin-process.js";
 
 const launcher = path.join(pluginRoot, "dist/launch");
@@ -27,11 +27,10 @@ function chromeExecutable() {
 }
 
 function createPackagedClient(serverEnvironment = {}) {
-  let nextId = 0;
   let stderr = "";
-  const pending = new Map();
   const temporaryRootPromise = mkdtemp(path.join(tmpdir(), "gitright-packaged-host-"));
   let child;
+  let client;
   let completion;
 
   async function start() {
@@ -44,20 +43,12 @@ function createPackagedClient(serverEnvironment = {}) {
         ...serverEnvironment,
       },
     });
-    const lines = createInterface({ input: child.stdout, crlfDelay: Infinity });
-    lines.on("line", (line) => {
-      let response;
-      try {
-        response = JSON.parse(line);
-      } catch (error) {
-        for (const waiter of pending.values()) waiter.reject(error);
-        pending.clear();
-        return;
-      }
-      const waiter = pending.get(response.id);
-      if (!waiter) return;
-      pending.delete(response.id);
-      waiter.resolve(response);
+    client = createMcpClient({
+      input: child.stdout,
+      output: child.stdin,
+      closedError: ({ code, signal }) => new Error(
+        `packaged MCP process closed before responding (code=${code}, signal=${signal})`,
+      ),
     });
     child.stderr.on("data", (chunk) => {
       stderr += chunk;
@@ -65,11 +56,7 @@ function createPackagedClient(serverEnvironment = {}) {
     completion = new Promise((resolve, reject) => {
       child.on("error", reject);
       child.on("close", (code, signal) => {
-        const error = new Error(
-          `packaged MCP process closed before responding (code=${code}, signal=${signal})`,
-        );
-        for (const waiter of pending.values()) waiter.reject(error);
-        pending.clear();
+        client.processClosed({ code, signal });
         resolve({ code, signal });
       });
     });
@@ -77,11 +64,7 @@ function createPackagedClient(serverEnvironment = {}) {
 
   async function request(method, params = {}) {
     if (!child) await start();
-    const id = ++nextId;
-    const response = await new Promise((resolve, reject) => {
-      pending.set(id, { resolve, reject });
-      child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", id, method, params })}\n`);
-    });
+    const response = await client.request(method, params);
     if (response.error) {
       const error = new Error(response.error.message ?? "packaged MCP request failed");
       error.cause = response.error;
@@ -92,7 +75,7 @@ function createPackagedClient(serverEnvironment = {}) {
 
   async function notify(method, params = {}) {
     if (!child) await start();
-    child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method, params })}\n`);
+    client.notify(method, params);
   }
 
   async function close() {
