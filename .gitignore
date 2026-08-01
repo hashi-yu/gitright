@@ -4,7 +4,3 @@ node_modules/
 *.log
 .idea/
 .vscode/
-
-# Personal agent instructions stay local
-CLAUDE.local.md
-.claude/settings.local.json
