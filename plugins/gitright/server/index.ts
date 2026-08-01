@@ -1,15 +1,7 @@
 import { readFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 
-import {
-  changedFilePageOutputSchema,
-  commitDetailOutputSchema,
-  fileDiffOutputSchema,
-  historyOutputSchema,
-  historyPageOutputSchema,
-  launchOutputSchema,
-  repositoryStateOutputSchema,
-} from "./apps-sdk-contract.ts";
+import { outputSchemas } from "../contract/index.ts";
 import { createCommitDetailService } from "./commit-detail-service.ts";
 import { createHistoryService } from "./history-service.ts";
 import {
@@ -104,7 +96,7 @@ const openGitRightTool = {
   description:
     "Open GitRight's read-only repository view for the current repository-linked task. Use for requests such as 'Open GitRight', 'Show this repository's history in GitRight', or 'Gitの履歴を表示して'. Do not use for generic Git questions such as 'What is git rebase?' or requests to run Git commands.",
   inputSchema: emptyInputSchema,
-  outputSchema: launchOutputSchema,
+  outputSchema: outputSchemas.launch,
   annotations: readOnlyAnnotations,
   _meta: {
     ui: {
@@ -120,7 +112,7 @@ const getRepositoryStateTool = {
   title: "Get repository state",
   description: "Return the pinned GitRight repository boundary state to the mounted app.",
   inputSchema: emptyInputSchema,
-  outputSchema: repositoryStateOutputSchema,
+  outputSchema: outputSchemas.repositoryState,
   annotations: readOnlyAnnotations,
   _meta: {
     ui: {
@@ -154,7 +146,7 @@ const getHistoryTool = {
       },
     ],
   },
-  outputSchema: historyOutputSchema,
+  outputSchema: outputSchemas.history,
   annotations: readOnlyAnnotations,
   _meta: {
     ui: {
@@ -189,7 +181,7 @@ const loadMoreTool = {
     ],
     additionalProperties: false,
   },
-  outputSchema: historyPageOutputSchema,
+  outputSchema: outputSchemas.historyPage,
   annotations: readOnlyAnnotations,
   _meta: {
     ui: {
@@ -213,7 +205,7 @@ const getCommitDetailTool = {
     required: ["snapshotId", "commitSha", "parentIndex"],
     additionalProperties: false,
   },
-  outputSchema: commitDetailOutputSchema,
+  outputSchema: outputSchemas.commitDetail,
   annotations: readOnlyAnnotations,
   _meta: {
     ui: {
@@ -242,7 +234,7 @@ const loadMoreFilesTool = {
     required: ["detailId", "loadedCount", "lastFileId"],
     additionalProperties: false,
   },
-  outputSchema: changedFilePageOutputSchema,
+  outputSchema: outputSchemas.changedFilePage,
   annotations: readOnlyAnnotations,
   _meta: {
     ui: {
@@ -265,7 +257,7 @@ const getDiffTool = {
     required: ["detailId", "fileId"],
     additionalProperties: false,
   },
-  outputSchema: fileDiffOutputSchema,
+  outputSchema: outputSchemas.fileDiff,
   annotations: readOnlyAnnotations,
   _meta: {
     ui: {

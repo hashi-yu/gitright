@@ -156,6 +156,7 @@ test("plugin source follows the accepted production layout", async () => {
   assert.deepEqual((await readdir(pluginRoot)).sort(), [
     ".codex-plugin",
     ".mcp.json",
+    "contract",
     "dist",
     "launcher",
     "server",

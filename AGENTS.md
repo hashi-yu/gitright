@@ -6,6 +6,8 @@ the repository attached to a Codex task, rendered in the Codex right pane.
 ## Repository layout
 
 - `plugins/gitright/launcher/` — handwritten POSIX launcher script.
+- `plugins/gitright/contract/` — the shapes that cross the server↔widget seam,
+  and the advertised schema, validation, and null restoration derived from them.
 - `plugins/gitright/server/` — MCP server source (TypeScript, runs on Bun).
 - `plugins/gitright/widget/` — widget source and its esbuild build script.
 - `plugins/gitright/dist/` — installable payload; ignored on `main`, committed
