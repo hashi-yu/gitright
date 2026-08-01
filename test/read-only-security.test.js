@@ -27,6 +27,9 @@ async function canApplyNetworkSandbox() {
 
 test("runtime sources contain no network, telemetry, or persistent browser storage APIs", async () => {
   const sources = await Promise.all([
+    "plugins/gitright/contract/index.ts",
+    "plugins/gitright/contract/payloads.ts",
+    "plugins/gitright/contract/schema.ts",
     "plugins/gitright/server/index.ts",
     "plugins/gitright/server/repository-binding.ts",
     "plugins/gitright/server/history-service.ts",

@@ -11,6 +11,7 @@
     "types": ["node"]
   },
   "include": [
+    "plugins/gitright/contract/**/*.ts",
     "plugins/gitright/server/**/*.ts",
     "plugins/gitright/widget/**/*.ts",
     "plugins/gitright/widget/**/*.tsx"

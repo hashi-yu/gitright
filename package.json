@@ -4,6 +4,7 @@
   "license": "MIT",
   "type": "module",
   "workspaces": [
+    "plugins/gitright/contract",
     "plugins/gitright/server",
     "plugins/gitright/widget"
   ],

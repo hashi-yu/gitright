@@ -3,13 +3,8 @@ import "./styles.css";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
+import { restoreOmittedNulls, validate } from "../contract/index.ts";
 import { commitDetailMatchesSelection } from "./commit-detail-state.ts";
-import {
-  restoreOmittedChangedFilePageNulls,
-  restoreOmittedCommitDetailNulls,
-  restoreOmittedFileDiffNulls,
-  restoreOmittedHistoryNulls,
-} from "./host-payload.ts";
 import {
   conversationHandoffModality,
   createConversationHandoffParams,
@@ -432,299 +427,43 @@ function initializeBridge(): Promise<HostEnvironment> {
 }
 
 function isRepositoryState(value: unknown): value is Exclude<RepositoryState, { status: "loading" }> {
-  if (!value || typeof value !== "object") return false;
-  const candidate = value as Record<string, unknown>;
-  if (typeof candidate.message !== "string") return false;
-  if (candidate.status === "unavailable") return true;
-  if (candidate.status === "unsupported") return typeof candidate.gitVersion === "string";
-  if (candidate.status === "ownership-refused") {
-    return typeof candidate.guidance === "string" && typeof candidate.gitVersion === "string";
-  }
-  if (candidate.status === "blocked") {
-    const blocked = value as Partial<Extract<RepositoryState, { status: "blocked" }>>;
-    return (
-      typeof blocked.requiredGitVersion === "string" &&
-      typeof blocked.detectedGitVersion === "string" &&
-      typeof blocked.durationMs === "number" &&
-      Number.isFinite(blocked.durationMs) &&
-      blocked.durationMs >= 0 &&
-      blocked.errorCode === "git-version-blocked"
-    );
-  }
-  return (
-    candidate.status === "ready" &&
-    typeof candidate.repositoryName === "string" &&
-    typeof candidate.repositoryPath === "string" &&
-    (candidate.repositoryKind === "repository" || candidate.repositoryKind === "linked-worktree") &&
-    (candidate.branch === null || typeof candidate.branch === "string") &&
-    (candidate.worktreeName === null || typeof candidate.worktreeName === "string") &&
-    typeof candidate.gitVersion === "string"
-  );
-}
-
-function isHistoryRef(value: unknown): value is HistoryRef {
-  if (!value || typeof value !== "object") return false;
-  const ref = value as Partial<HistoryRef>;
-  return (
-    typeof ref.name === "string" &&
-    typeof ref.fullName === "string" &&
-    ["head", "local-branch", "remote-branch", "tag"].includes(String(ref.kind)) &&
-    typeof ref.checkedOut === "boolean"
-  );
-}
-
-function isHistoryCommit(value: unknown): value is HistoryCommit {
-  if (!value || typeof value !== "object") return false;
-  const commit = value as Partial<HistoryCommit>;
-  return (
-    typeof commit.sha === "string" &&
-    /^[0-9a-f]{40}$/.test(commit.sha) &&
-    commit.shortSha === commit.sha.slice(0, 7) &&
-    typeof commit.subject === "string" &&
-    typeof commit.committerTime === "number" &&
-    typeof commit.relativeCommitterTime === "string" &&
-    ["root", "commit", "merge", "octopus merge"].includes(String(commit.topologyRole)) &&
-    typeof commit.shallowBoundary === "boolean" &&
-    Array.isArray(commit.parents) &&
-    commit.parents.every(
-      (parent) =>
-        !!parent &&
-        typeof parent === "object" &&
-        /^[0-9a-f]{40}$/.test(String(parent.sha)) &&
-        typeof parent.loaded === "boolean",
-    ) &&
-    Array.isArray(commit.refs) &&
-    commit.refs.every(isHistoryRef) &&
-    Array.isArray(commit.inlineRefs) &&
-    commit.inlineRefs.length <= 3 &&
-    commit.inlineRefs.every(isHistoryRef) &&
-    typeof commit.additionalRefCount === "number"
-  );
-}
-
-function isHistorySelection(value: unknown): value is HistoryStateSelection {
-  if (!value || typeof value !== "object") return false;
-  const selection = value as { status?: unknown; sha?: unknown };
-  if (selection.status === "none") return typeof selection.sha === "undefined";
-  return (
-    ["reachable", "unreachable", "missing"].includes(String(selection.status)) &&
-    typeof selection.sha === "string" &&
-    /^[0-9a-f]{40}$/.test(selection.sha)
-  );
+  return validate.repositoryState(value);
 }
 
 function isHistorySnapshot(value: unknown): value is HistorySnapshot {
-  if (!value || typeof value !== "object") return false;
-  const snapshot = value as Partial<HistorySnapshot>;
-  return (
-    snapshot.status === "ready" &&
-    typeof snapshot.snapshotId === "string" &&
-    /^[0-9a-f]{64}$/.test(snapshot.snapshotId) &&
-    typeof snapshot.snapshotTime === "number" &&
-    typeof snapshot.refFingerprint === "string" &&
-    /^[0-9a-f]{64}$/.test(snapshot.refFingerprint) &&
-    (snapshot.headSha === null || (
-      typeof snapshot.headSha === "string" &&
-      /^[0-9a-f]{40}$/.test(snapshot.headSha)
-    )) &&
-    snapshot.pageSize === 500 &&
-    typeof snapshot.loadedCount === "number" &&
-    snapshot.loadedCount >= 0 &&
-    snapshot.loadedCount <= 100_000 &&
-    typeof snapshot.hasContinuation === "boolean" &&
-    typeof snapshot.hasMore === "boolean" &&
-    Array.isArray(snapshot.commits) &&
-    snapshot.commits.length === snapshot.loadedCount &&
-    snapshot.commits.every(isHistoryCommit) &&
-    isHistorySelection(snapshot.selection)
-  );
+  return validate.historySnapshot(value);
 }
 
 function isHistoryPage(value: unknown): value is HistoryPage {
-  if (!value || typeof value !== "object") return false;
-  const page = value as Partial<HistoryPage>;
-  return (
-    page.status === "ready" &&
-    typeof page.snapshotId === "string" &&
-    /^[0-9a-f]{64}$/.test(page.snapshotId) &&
-    typeof page.refFingerprint === "string" &&
-    /^[0-9a-f]{64}$/.test(page.refFingerprint) &&
-    typeof page.previousLoadedCount === "number" &&
-    Number.isSafeInteger(page.previousLoadedCount) &&
-    page.previousLoadedCount >= 0 &&
-    (page.previousLastCommitSha === null || (
-      typeof page.previousLastCommitSha === "string" &&
-      /^[0-9a-f]{40}$/.test(page.previousLastCommitSha)
-    )) &&
-    typeof page.loadedCount === "number" &&
-    Number.isSafeInteger(page.loadedCount) &&
-    page.loadedCount >= 0 &&
-    page.loadedCount <= 100_000 &&
-    page.pageSize === 500 &&
-    typeof page.hasContinuation === "boolean" &&
-    typeof page.hasMore === "boolean" &&
-    Array.isArray(page.commits) &&
-    page.commits.length > 0 &&
-    page.commits.length <= 500 &&
-    page.commits.every(isHistoryCommit)
-  );
+  return validate.historyPage(value);
 }
 
 function isHistoryChanged(value: unknown): value is HistoryChanged {
-  if (!value || typeof value !== "object") return false;
-  const changed = value as Partial<HistoryChanged>;
-  return (
-    changed.status === "changed" &&
-    changed.message === "History changed — Refresh to continue" &&
-    changed.code === "history-changed" &&
-    typeof changed.snapshotId === "string" &&
-    /^[0-9a-f]{64}$/.test(changed.snapshotId)
-  );
+  return validate.historyChanged(value);
 }
 
 function isHistoryErrorSnapshot(value: unknown): value is HistoryErrorSnapshot {
-  if (!value || typeof value !== "object") return false;
-  const error = value as Partial<HistoryErrorSnapshot>;
-  return (
-    error.status === "error" &&
-    [
-      "History is unavailable",
-      "History exceeds GitRight's supported snapshot limit",
-      "History page boundary is invalid",
-      "History refresh is already in progress",
-      "History refresh request is stale",
-      "History changed — Refresh to continue",
-      "Repository is temporarily locked — Refresh to retry",
-      "Repository object is missing",
-      "Repository object is corrupt",
-    ].includes(String(error.message)) &&
-    typeof error.code === "string"
-  );
-}
-
-function isChangedFile(value: unknown): value is ChangedFile {
-  if (!value || typeof value !== "object") return false;
-  const file = value as Partial<ChangedFile>;
-  return (
-    typeof file.fileId === "string" &&
-    /^[0-9a-f]{64}$/.test(file.fileId) &&
-    ["added", "modified", "deleted", "renamed", "type-changed", "unknown"].includes(
-      String(file.status),
-    ) &&
-    typeof file.path === "string" &&
-    (file.oldPath === null || typeof file.oldPath === "string") &&
-    (file.additions === null || (
-      Number.isSafeInteger(file.additions) && (file.additions as number) >= 0
-    )) &&
-    (file.deletions === null || (
-      Number.isSafeInteger(file.deletions) && (file.deletions as number) >= 0
-    ))
-  );
-}
-
-function isCommitDate(value: unknown): value is CommitDate {
-  if (!value || typeof value !== "object") return false;
-  const date = value as Partial<CommitDate>;
-  return typeof date.recorded === "string" && typeof date.local === "string";
+  return validate.historyError(value);
 }
 
 function isCommitDetail(value: unknown): value is CommitDetail {
-  if (!value || typeof value !== "object") return false;
-  const detail = value as Partial<CommitDetail>;
-  const parents = Array.isArray(detail.parents) ? detail.parents : [];
-  const selectedParentIsValid = parents.length === 0
-    ? detail.selectedParentIndex === null && detail.selectedParentSha === null
-    : Number.isSafeInteger(detail.selectedParentIndex) &&
-      (detail.selectedParentIndex as number) >= 0 &&
-      (detail.selectedParentIndex as number) < parents.length &&
-      detail.selectedParentSha === parents[detail.selectedParentIndex as number];
-  const summary = detail.summary as Partial<CommitDetail["summary"]> | undefined;
-  return (
-    detail.status === "ready" &&
-    typeof detail.detailId === "string" &&
-    /^[0-9a-f]{64}$/.test(detail.detailId) &&
-    typeof detail.snapshotId === "string" &&
-    /^[0-9a-f]{64}$/.test(detail.snapshotId) &&
-    typeof detail.sha === "string" &&
-    /^[0-9a-f]{40}$/.test(detail.sha) &&
-    typeof detail.message === "string" &&
-    typeof detail.authorName === "string" &&
-    isCommitDate(detail.authorDate) &&
-    isCommitDate(detail.committerDate) &&
-    parents.every((parent) => typeof parent === "string" && /^[0-9a-f]{40}$/.test(parent)) &&
-    Array.isArray(detail.refs) &&
-    detail.refs.every(isHistoryRef) &&
-    selectedParentIsValid &&
-    !!summary &&
-    Number.isSafeInteger(summary.totalFiles) &&
-    (summary.totalFiles as number) >= 0 &&
-    Number.isSafeInteger(summary.additions) &&
-    (summary.additions as number) >= 0 &&
-    Number.isSafeInteger(summary.deletions) &&
-    (summary.deletions as number) >= 0 &&
-    Number.isSafeInteger(summary.binaryFiles) &&
-    (summary.binaryFiles as number) >= 0 &&
-    Number.isSafeInteger(detail.loadedFileCount) &&
-    (detail.loadedFileCount as number) >= 0 &&
-    Number.isSafeInteger(detail.totalFileCount) &&
-    (detail.totalFileCount as number) >= 0 &&
-    (detail.totalFileCount as number) <= 100_000 &&
-    (detail.loadedFileCount as number) <= (detail.totalFileCount as number) &&
-    detail.filePageSize === 500 &&
-    typeof detail.hasMoreFiles === "boolean" &&
-    typeof detail.renameDetectionSkipped === "boolean" &&
-    detail.hasMoreFiles === (
-      (detail.loadedFileCount as number) < (detail.totalFileCount as number)
-    ) &&
-    Array.isArray(detail.files) &&
-    detail.files.length === detail.loadedFileCount &&
-    detail.files.every(isChangedFile)
-  );
+  return validate.commitDetail(value);
 }
 
 function isChangedFilePage(value: unknown): value is ChangedFilePage {
-  if (!value || typeof value !== "object") return false;
-  const page = value as Partial<ChangedFilePage>;
-  return (
-    page.status === "ready" &&
-    typeof page.detailId === "string" &&
-    /^[0-9a-f]{64}$/.test(page.detailId) &&
-    Number.isSafeInteger(page.previousLoadedCount) &&
-    (page.previousLoadedCount as number) >= 0 &&
-    (page.previousLastFileId === null || (
-      typeof page.previousLastFileId === "string" &&
-      /^[0-9a-f]{64}$/.test(page.previousLastFileId)
-    )) &&
-    Number.isSafeInteger(page.loadedCount) &&
-    (page.loadedCount as number) >= 0 &&
-    Number.isSafeInteger(page.totalCount) &&
-    (page.totalCount as number) >= 0 &&
-    (page.totalCount as number) <= 100_000 &&
-    page.pageSize === 500 &&
-    typeof page.hasMoreFiles === "boolean" &&
-    Array.isArray(page.files) &&
-    page.files.length > 0 &&
-    page.files.length <= 500 &&
-    page.files.every(isChangedFile)
-  );
+  return validate.changedFilePage(value);
 }
 
 function isCommitDetailError(value: unknown): value is CommitDetailError {
-  if (!value || typeof value !== "object") return false;
-  const error = value as Partial<CommitDetailError>;
-  return (
-    error.status === "error" &&
-    [
-      "Commit detail is unavailable",
-      "Commit detail request is stale",
-      "Changed-file request timed out",
-      "Changed-file page boundary is invalid",
-      "Repository is temporarily locked — Refresh to retry",
-      "Repository object is missing",
-      "Repository object is corrupt",
-    ].includes(String(error.message)) &&
-    typeof error.code === "string"
-  );
+  return validate.commitDetailError(value);
+}
+
+function isFileDiff(value: unknown): value is FileDiff {
+  return validate.fileDiff(value);
+}
+
+function isFileDiffError(value: unknown): value is FileDiffError {
+  return validate.fileDiffError(value);
 }
 
 type LoadedCommitDetail =
@@ -741,7 +480,7 @@ async function loadCommitDetail(
       name: "get_commit_detail",
       arguments: { snapshotId, commitSha, parentIndex },
     })) as { structuredContent?: unknown };
-    const structuredContent = restoreOmittedCommitDetailNulls(result?.structuredContent);
+    const structuredContent = restoreOmittedNulls.commitDetail(result?.structuredContent);
     if (
       isCommitDetail(structuredContent) &&
       commitDetailMatchesSelection(structuredContent, snapshotId, commitSha, parentIndex)
@@ -757,81 +496,6 @@ async function loadCommitDetail(
   } catch {
     return { status: "error", message: "Commit detail is unavailable" };
   }
-}
-
-function isFileDiffLine(value: unknown): value is FileDiffLine {
-  if (!value || typeof value !== "object") return false;
-  const line = value as Partial<FileDiffLine>;
-  return (
-    ["header", "hunk", "context", "addition", "deletion", "meta"].includes(
-      String(line.kind),
-    ) &&
-    typeof line.content === "string" &&
-    (line.oldLine === null || (
-      Number.isSafeInteger(line.oldLine) && (line.oldLine as number) >= 0
-    )) &&
-    (line.newLine === null || (
-      Number.isSafeInteger(line.newLine) && (line.newLine as number) >= 0
-    ))
-  );
-}
-
-function isFileDiff(value: unknown): value is FileDiff {
-  if (!value || typeof value !== "object") return false;
-  const diff = value as Partial<FileDiff>;
-  const statistics = diff.statistics as Partial<FileDiff["statistics"]> | undefined;
-  return (
-    diff.status === "ready" &&
-    typeof diff.detailId === "string" &&
-    /^[0-9a-f]{64}$/.test(diff.detailId) &&
-    typeof diff.fileId === "string" &&
-    /^[0-9a-f]{64}$/.test(diff.fileId) &&
-    typeof diff.path === "string" &&
-    (diff.oldPath === null || typeof diff.oldPath === "string") &&
-    !!statistics &&
-    (statistics.additions === null || (
-      Number.isSafeInteger(statistics.additions) && (statistics.additions as number) >= 0
-    )) &&
-    (statistics.deletions === null || (
-      Number.isSafeInteger(statistics.deletions) && (statistics.deletions as number) >= 0
-    )) &&
-    Number.isSafeInteger(diff.bytes) &&
-    (diff.bytes as number) >= 0 &&
-    (diff.bytes as number) <= 1024 * 1024 &&
-    Number.isSafeInteger(diff.lineCount) &&
-    (diff.lineCount as number) >= 0 &&
-    (diff.lineCount as number) <= 20_000 &&
-    typeof diff.truncated === "boolean" &&
-    (diff.truncated
-      ? ["bytes", "lines"].includes(String(diff.truncatedBy))
-      : diff.truncatedBy === null) &&
-    Array.isArray(diff.lines) &&
-    diff.lines.length === diff.lineCount &&
-    diff.lines.every(isFileDiffLine)
-  );
-}
-
-function isFileDiffError(value: unknown): value is FileDiffError {
-  if (!value || typeof value !== "object") return false;
-  const error = value as Partial<FileDiffError>;
-  return (
-    error.status === "error" &&
-    [
-      "File diff is unavailable",
-      "File diff request is stale",
-      "Repository is temporarily locked — Refresh to retry",
-      "Repository object is missing",
-      "Repository object is corrupt",
-    ].includes(
-      String(error.message),
-    ) &&
-    typeof error.code === "string" &&
-    typeof error.detailId === "string" &&
-    /^[0-9a-f]{64}$/.test(error.detailId) &&
-    typeof error.fileId === "string" &&
-    /^[0-9a-f]{64}$/.test(error.fileId) &&
-    (error.path === null || typeof error.path === "string")
-  );
 }
 
 /* ---- icons (bundled inline; CSP forbids external assets) ---- */
@@ -2225,7 +1889,7 @@ function GitRightView({
           arguments: {},
         })) as { structuredContent?: unknown };
         if (!active) return;
-        const structuredContent = restoreOmittedHistoryNulls(historyResult?.structuredContent);
+        const structuredContent = restoreOmittedNulls.history(historyResult?.structuredContent);
         if (isHistorySnapshot(structuredContent)) {
           const snapshot = structuredContent;
           const restoredSelectedSha = restoreWidgetSelection(
@@ -2454,7 +2118,7 @@ function GitRightView({
         },
       })) as { structuredContent?: unknown };
       if (!fileDiffRequestGuard.accepts(requestToken)) return;
-      const structuredContent = restoreOmittedFileDiffNulls(result?.structuredContent);
+      const structuredContent = restoreOmittedNulls.fileDiff(result?.structuredContent);
       if (
         isFileDiff(structuredContent) &&
         structuredContent.detailId === requestedDetailId &&
@@ -2520,7 +2184,7 @@ function GitRightView({
         },
       })) as { structuredContent?: unknown };
       if (!changedFilePageGuard.accepts(requestToken)) return;
-      const structuredContent = restoreOmittedChangedFilePageNulls(result?.structuredContent);
+      const structuredContent = restoreOmittedNulls.changedFilePage(result?.structuredContent);
       if (isChangedFilePage(structuredContent)) {
         const appended = appendChangedFilePage(commitDetail, structuredContent);
         if (appended.status === "ready") {
@@ -2564,7 +2228,7 @@ function GitRightView({
           lastCommitSha: history.commits.at(-1)?.sha ?? null,
         },
       })) as { structuredContent?: unknown };
-      const structuredContent = restoreOmittedHistoryNulls(result?.structuredContent);
+      const structuredContent = restoreOmittedNulls.historyPage(result?.structuredContent);
       if (isHistoryPage(structuredContent)) {
         const appended = appendHistoryPage(history, structuredContent);
         if (appended.status === "ready") {
@@ -2601,7 +2265,7 @@ function GitRightView({
           selectedSha,
         },
       })) as { structuredContent?: unknown };
-      const structuredContent = restoreOmittedHistoryNulls(result?.structuredContent);
+      const structuredContent = restoreOmittedNulls.history(result?.structuredContent);
       if (isHistorySnapshot(structuredContent)) {
         const scrollTop = refreshGuard.captureReplacementScroll(
           () => graphScrollElement.current?.scrollTop ?? 0,
