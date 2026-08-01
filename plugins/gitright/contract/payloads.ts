@@ -89,7 +89,6 @@ export const historyCommit = object(
     shortSha: str({ pattern: "^[0-9a-f]{7,40}$" }),
     subject: str(),
     committerTime: advertised(int(), rawNumber()),
-    relativeCommitterTime: str(),
     topologyRole: stringified(stringEnum(["root", "commit", "merge", "octopus merge"])),
     shallowBoundary: bool(),
     parents: array(object({ sha: stringified(sha), loaded: bool() })),
@@ -235,10 +234,13 @@ export const changedFile = object(
   { refine: (file) => isCount(file.additions) && isCount(file.deletions) },
 );
 
-export const commitDate = object({
-  recorded: str(),
-  local: str(),
-});
+/**
+ * Commit times cross the seam machine-readable only: history rows carry epoch
+ * seconds, and commit detail carries the date exactly as Git recorded it,
+ * canonicalized to a strict ISO string. Every displayed string is produced on
+ * the widget side.
+ */
+export const commitDate = str();
 
 export const getCommitDetailError = union([
   boundedError("Commit detail is unavailable", [

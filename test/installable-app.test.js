@@ -306,8 +306,8 @@ test("installed app seam loads one selected commit, its changed files, and one f
   assert.deepEqual(detail.refs, selected.refs);
   assert.equal(typeof detail.message, "string");
   assert.equal(typeof detail.authorName, "string");
-  assert.match(detail.authorDate.recorded, /T/);
-  assert.equal(typeof detail.authorDate.local, "string");
+  assert.match(detail.authorDate, /T/);
+  assert.match(detail.committerDate, /T/);
   assert.equal(detail.loadedFileCount, detail.files.length);
   assert.ok(detail.loadedFileCount <= 500);
   assert.equal(detail.summary.totalFiles, detail.totalFileCount);

@@ -18,7 +18,6 @@ function commit(value) {
     shortSha: objectId.slice(0, 7),
     subject: `Commit ${value}`,
     committerTime: 1_800_000_000 - value,
-    relativeCommitterTime: `${value} seconds ago`,
     topologyRole: "commit",
     shallowBoundary: false,
     parents: [],

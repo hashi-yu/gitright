@@ -3,12 +3,12 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
+import { formatRelativeTime } from "../plugins/gitright/widget/commit-time.ts";
 import {
   commitAccessibilityLabel,
   copyFor,
   diffLineAccessibilityLabel,
   fileAccessibilityLabel,
-  formatRelativeTime,
   isActivationKey,
   resolveLocale,
   translateServiceMessage,

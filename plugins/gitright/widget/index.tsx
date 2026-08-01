@@ -49,12 +49,12 @@ import {
   copyFor,
   diffLineAccessibilityLabel,
   fileAccessibilityLabel,
-  formatRelativeTime,
   isActivationKey,
   translateServiceMessage,
   type Copy,
   type GitRightLocale,
 } from "./localization.ts";
+import { formatCommitTimestamp, formatRelativeTime } from "./commit-time.ts";
 import {
   appendHistoryPage,
   createHistoryRefreshGuard,
@@ -118,7 +118,6 @@ type HistoryCommit = {
   shortSha: string;
   subject: string;
   committerTime: number;
-  relativeCommitterTime: string;
   topologyRole: "root" | "commit" | "merge" | "octopus merge";
   shallowBoundary: boolean;
   parents: Array<{ sha: string; loaded: boolean }>;
@@ -191,11 +190,6 @@ type ChangedFile = {
   deletions: number | null;
 };
 
-type CommitDate = {
-  recorded: string;
-  local: string;
-};
-
 type CommitDetail = {
   status: "ready";
   detailId: string;
@@ -203,8 +197,8 @@ type CommitDetail = {
   sha: string;
   message: string;
   authorName: string;
-  authorDate: CommitDate;
-  committerDate: CommitDate;
+  authorDate: string;
+  committerDate: string;
   parents: string[];
   refs: HistoryRef[];
   selectedParentIndex: number | null;
@@ -1126,13 +1120,6 @@ function fileDirectory(path: string): string {
   return separator === -1 ? "" : path.slice(0, separator + 1);
 }
 
-/** Compact `yyyy-mm-dd hh:mm` in the commit's recorded wall time; the
- * full recorded/local strings stay available on hover. */
-function formatCommitDateDisplay(recorded: string): string {
-  const match = recorded.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
-  return match ? `${match[1]} ${match[2]}` : recorded;
-}
-
 function SheetDetailSection({
   subject,
   laneIndex,
@@ -1250,17 +1237,17 @@ function SheetDetailSection({
             </div>
             <div>
               <dt>{copy.authorDate}</dt>
-              <dd title={`${detail.authorDate.recorded} · ${detail.authorDate.local}`}>
-                <time dateTime={detail.authorDate.recorded}>
-                  {formatCommitDateDisplay(detail.authorDate.recorded)}
+              <dd title={detail.authorDate}>
+                <time dateTime={detail.authorDate}>
+                  {formatCommitTimestamp(detail.authorDate)}
                 </time>
               </dd>
             </div>
             <div>
               <dt>{copy.committerDate}</dt>
-              <dd title={`${detail.committerDate.recorded} · ${detail.committerDate.local}`}>
-                <time dateTime={detail.committerDate.recorded}>
-                  {formatCommitDateDisplay(detail.committerDate.recorded)}
+              <dd title={detail.committerDate}>
+                <time dateTime={detail.committerDate}>
+                  {formatCommitTimestamp(detail.committerDate)}
                 </time>
               </dd>
             </div>

@@ -1290,8 +1290,8 @@ test("packaged app keeps long changed-file rows inside the supported 380px viewp
       "the file search must stay hidden below six loaded entries",
     );
 
-    // The compact text preserves the recorded wall time without timezone
-    // conversion, while the complete recorded/local strings stay on hover.
+    // The compact text is the recorded time in the viewer's timezone, which the
+    // fixture pins to UTC; hover shows the complete recorded string alone.
     for (const label of ["Author date", "Committer date"]) {
       const dateRow = host.widget.locator(".gr-meta > div").filter({ hasText: label });
       const dateCell = dateRow.locator("dd");
@@ -1300,10 +1300,7 @@ test("packaged app keeps long changed-file rows inside the supported 380px viewp
         await dateCell.locator("time").getAttribute("datetime"),
         "2026-01-01T00:00:00Z",
       );
-      assert.match(
-        await dateCell.getAttribute("title"),
-        /^2026-01-01T00:00:00Z · .+$/,
-      );
+      assert.equal(await dateCell.getAttribute("title"), "2026-01-01T00:00:00Z");
     }
 
     const layout = await row.evaluate((button) => {

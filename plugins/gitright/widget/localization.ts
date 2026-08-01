@@ -336,31 +336,6 @@ export function translateServiceMessage(message: string, copy: Copy): string {
   return copy.locale === "ja" ? japaneseServiceMessages.get(message) ?? message : message;
 }
 
-export function formatRelativeTime(
-  committerTime: number,
-  snapshotTime: number,
-  locale: GitRightLocale,
-): string {
-  const seconds = Math.max(0, snapshotTime - committerTime);
-  const units: Array<[number, string, string]> = [
-    [31_536_000, "year", "年"],
-    [2_592_000, "month", "か月"],
-    [86_400, "day", "日"],
-    [3_600, "hour", "時間"],
-    [60, "minute", "分"],
-  ];
-  for (const [size, english, japanese] of units) {
-    if (seconds >= size) {
-      const count = Math.floor(seconds / size);
-      return locale === "ja"
-        ? `${count}${japanese}前`
-        : `${count} ${plural(count, english)} ago`;
-    }
-  }
-  if (seconds < 5) return locale === "ja" ? "たった今" : "just now";
-  return locale === "ja" ? `${seconds}秒前` : `${seconds} seconds ago`;
-}
-
 export function isActivationKey(key: string): boolean {
   return key === "Enter" || key === " ";
 }

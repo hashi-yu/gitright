@@ -35,7 +35,6 @@ export type HistoryCommit = {
   shortSha: string;
   subject: string;
   committerTime: number;
-  relativeCommitterTime: string;
   topologyRole: "root" | "commit" | "merge" | "octopus merge";
   shallowBoundary: boolean;
   parents: Array<{ sha: string; loaded: boolean }>;
@@ -513,24 +512,6 @@ function refPriority(ref: HistoryRef): number {
   return 4;
 }
 
-function relativeTime(committerTime: number, snapshotTime: number): string {
-  const seconds = Math.max(0, snapshotTime - committerTime);
-  const units: Array<[number, string]> = [
-    [365 * 24 * 60 * 60, "year"],
-    [30 * 24 * 60 * 60, "month"],
-    [24 * 60 * 60, "day"],
-    [60 * 60, "hour"],
-    [60, "minute"],
-  ];
-  for (const [size, label] of units) {
-    if (seconds >= size) {
-      const count = Math.floor(seconds / size);
-      return `${count} ${label}${count === 1 ? "" : "s"} ago`;
-    }
-  }
-  return seconds < 5 ? "just now" : `${seconds} seconds ago`;
-}
-
 function topologyRole(parentCount: number): HistoryCommit["topologyRole"] {
   if (parentCount === 0) return "root";
   if (parentCount === 1) return "commit";
@@ -660,7 +641,6 @@ export function createHistoryService(
     capture: RefCapture,
     rawCommits: readonly RawCommit[],
     loadedShas: Set<string>,
-    snapshotTime: number,
   ): Promise<{ commits: HistoryCommit[] } | HistoryError> {
     const subjects = new Map<string, string>();
     for (let offset = 0; offset < rawCommits.length; offset += 500) {
@@ -709,7 +689,6 @@ export function createHistoryService(
           shortSha: commit.sha.slice(0, 7),
           subject: subjects.get(commit.sha) ?? "",
           committerTime: commit.committerTime,
-          relativeCommitterTime: relativeTime(commit.committerTime, snapshotTime),
           topologyRole: topologyRole(commit.parents.length),
           shallowBoundary: commit.shallowBoundary,
           parents: commit.parents.map((parent) => ({
@@ -921,7 +900,6 @@ export function createHistoryService(
       capture,
       cursor.ordered,
       loadedShas,
-      snapshotTime,
     );
     if ("status" in materialized) return materialized;
     const selection = await classifySelection(
@@ -1066,7 +1044,6 @@ export function createHistoryService(
       previous.capture,
       rawPage,
       loadedShas,
-      previous.snapshot.snapshotTime,
     );
     if ("status" in materialized) return materialized;
 
