@@ -58,7 +58,9 @@ export function formatCommitTimestamp(recorded: string, timeZone?: string): stri
   }).formatToParts(instant);
   const field = (type: Intl.DateTimeFormatPartTypes): string =>
     parts.find((part) => part.type === type)?.value ?? "";
-  const year = field("year");
+  // A year below 1000 is formatted without leading zeros, so pad it back to
+  // keep the field widths fixed.
+  const year = field("year").padStart(4, "0");
   const month = field("month");
   const day = field("day");
   const hour = field("hour");

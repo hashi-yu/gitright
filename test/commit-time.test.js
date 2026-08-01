@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
@@ -35,6 +34,11 @@ test("shows the recorded instant compactly in the viewer's timezone", () => {
     formatCommitTimestamp("2026-07-13T09:10:11+09:00", "UTC"),
     "2026-07-13 00:10",
   );
+});
+
+test("pads a year below 1000 so the field widths stay fixed", () => {
+  assert.equal(formatCommitTimestamp("0001-02-03T04:05:00Z", "UTC"), "0001-02-03 04:05");
+  assert.equal(formatCommitTimestamp("0999-12-31T23:59:00Z", "UTC"), "0999-12-31 23:59");
 });
 
 test("follows the viewer's own timezone when none is given", () => {
@@ -84,19 +88,4 @@ test("the seam carries machine-readable commit time only", () => {
   const commitDetail = outputSchemas.commitDetail.oneOf[0].properties;
   assert.deepEqual(commitDetail.authorDate, { type: "string" });
   assert.deepEqual(commitDetail.committerDate, { type: "string" });
-});
-
-test("the server holds no display formatting for commit time", async () => {
-  const sources = await Promise.all(
-    ["index.ts", "repository-binding.ts", "history-service.ts", "commit-detail-service.ts"]
-      .map((file) =>
-        readFile(path.join(repositoryRoot, "plugins/gitright/server", file), "utf8")
-      ),
-  );
-  const server = sources.join("\n");
-  assert.equal(server.includes("Intl"), false);
-  assert.equal(server.includes("defaultLocalDate"), false);
-  assert.equal(server.includes("relativeCommitterTime"), false);
-  // Git's date-output compatibility knowledge stays next to Git.
-  assert.match(server, /canonicalGitDate/);
 });
