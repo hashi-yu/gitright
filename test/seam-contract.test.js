@@ -306,7 +306,6 @@ function readyHistory(commitOverrides = {}, overrides = {}) {
       shortSha: sha.slice(0, 7),
       subject: "example",
       committerTime: 1800000000,
-      relativeCommitterTime: "1 hour ago",
       topologyRole: "root",
       shallowBoundary: false,
       parents: [],

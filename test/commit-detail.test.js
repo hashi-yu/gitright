@@ -160,10 +160,7 @@ test("canonicalizes UTC recorded dates independent of the Git version", async ()
     authorDate: "2026-01-01T00:00:00+00:00",
     committerDate: "2026-01-01T00:00:00Z",
   });
-  const service = createCommitDetailService(
-    fixture.executor,
-    (value) => `local:${value}`,
-  );
+  const service = createCommitDetailService(fixture.executor);
 
   const detail = await service.load(
     "/tmp/repository",
@@ -172,14 +169,8 @@ test("canonicalizes UTC recorded dates independent of the Git version", async ()
   );
 
   assert.equal(detail.status, "ready");
-  assert.deepEqual(detail.authorDate, {
-    recorded: "2026-01-01T00:00:00Z",
-    local: "local:2026-01-01T00:00:00Z",
-  });
-  assert.deepEqual(detail.committerDate, {
-    recorded: "2026-01-01T00:00:00Z",
-    local: "local:2026-01-01T00:00:00Z",
-  });
+  assert.equal(detail.authorDate, "2026-01-01T00:00:00Z");
+  assert.equal(detail.committerDate, "2026-01-01T00:00:00Z");
 });
 
 test("loads sanitized commit metadata and the first changed-file page", async () => {
@@ -203,10 +194,7 @@ test("loads sanitized commit metadata and the first changed-file page", async ()
     author: "Ada\u001b[31m Lovelace\u0007\u202eoverride",
     message: "<b>Plain</b> https://example.invalid\n\u001b[2JBody\u0001\r\u2066isolated\u2069\n",
   });
-  const service = createCommitDetailService(
-    fixture.executor,
-    (value) => `local:${value}`,
-  );
+  const service = createCommitDetailService(fixture.executor);
 
   const detail = await service.load(
     "/tmp/repository",
@@ -222,14 +210,8 @@ test("loads sanitized commit metadata and the first changed-file page", async ()
     "<b>Plain</b> https://example.invalid\n�[2JBody���isolated�\n",
   );
   assert.equal(detail.authorName, "Ada�[31m Lovelace��override");
-  assert.deepEqual(detail.authorDate, {
-    recorded: "2026-07-13T09:10:11+09:00",
-    local: "local:2026-07-13T09:10:11+09:00",
-  });
-  assert.deepEqual(detail.committerDate, {
-    recorded: "2026-07-13T10:11:12-04:00",
-    local: "local:2026-07-13T10:11:12-04:00",
-  });
+  assert.equal(detail.authorDate, "2026-07-13T09:10:11+09:00");
+  assert.equal(detail.committerDate, "2026-07-13T10:11:12-04:00");
   assert.deepEqual(detail.parents, parents);
   assert.deepEqual(detail.refs, binding(commitSha, parents).refs);
   assert.equal(detail.selectedParentIndex, 0);
@@ -309,7 +291,7 @@ test("retries one timed-out rename-aware changed-file request with renames disab
       throw new Error(`Unexpected operation: ${operation}`);
     },
   };
-  const service = createCommitDetailService(executor, (value) => value);
+  const service = createCommitDetailService(executor);
 
   const detail = await service.load(
     "/tmp/repository",
@@ -364,7 +346,7 @@ test("a double changed-file timeout keeps the last complete detail and exposes n
       throw new Error(`Unexpected operation: ${operation}`);
     },
   };
-  const service = createCommitDetailService(executor, (value) => value);
+  const service = createCommitDetailService(executor);
   const lastGood = await service.load(
     "/tmp/repository",
     { snapshotId: "8".repeat(64), parentIndex: 0 },
@@ -403,7 +385,7 @@ test("keeps canonically distinct macOS Unicode paths distinct without normalizat
     parents,
     filesByParent: new Map([[parents[0], files]]),
   });
-  const service = createCommitDetailService(fixture.executor, (value) => value);
+  const service = createCommitDetailService(fixture.executor);
 
   const detail = await service.load(
     "/tmp/repository",
@@ -442,7 +424,7 @@ test("loads only the selected file's unified diff with old and new line numbers"
     ]]),
     diffsByPath: new Map([["README.md", patch]]),
   });
-  const service = createCommitDetailService(fixture.executor, (value) => value);
+  const service = createCommitDetailService(fixture.executor);
   const detail = await service.load(
     "/tmp/repository",
     { snapshotId: "a".repeat(64), parentIndex: 0 },
@@ -505,7 +487,7 @@ test("binary diff checks exact blob existence without reading blob content", asy
     filesByParent: new Map([[parents[0], [file]]]),
     diffsByPath: new Map([["image.png", "+SECRET_BINARY_CONTENT\n"]]),
   });
-  const service = createCommitDetailService(fixture.executor, (value) => value);
+  const service = createCommitDetailService(fixture.executor);
   const detail = await service.load(
     "/tmp/repository",
     { snapshotId: "b".repeat(64), parentIndex: 0 },
@@ -575,7 +557,7 @@ test("keeps invalid filename bytes display-safe while selecting its exact blob p
     filesByParent: new Map([[parents[0], files]]),
     diffsByPath: new Map([["invalid-\\xFF.txt", patch]]),
   });
-  const service = createCommitDetailService(fixture.executor, (value) => value);
+  const service = createCommitDetailService(fixture.executor);
   const detail = await service.load(
     "/tmp/repository",
     { snapshotId: "f".repeat(64), parentIndex: 0 },
@@ -621,7 +603,7 @@ test("caps a selected file diff at 20,000 lines and retains its original statist
     ]]),
     diffsByPath: new Map([["many.txt", patch]]),
   });
-  const service = createCommitDetailService(fixture.executor, (value) => value);
+  const service = createCommitDetailService(fixture.executor);
   const detail = await service.load(
     "/tmp/repository",
     { snapshotId: "b".repeat(64), parentIndex: 0 },
@@ -665,7 +647,7 @@ test("caps a selected file diff at 1 MiB before the line limit", async () => {
     ]]),
     diffsByPath: new Map([["large.txt", patch]]),
   });
-  const service = createCommitDetailService(fixture.executor, (value) => value);
+  const service = createCommitDetailService(fixture.executor);
   const detail = await service.load(
     "/tmp/repository",
     { snapshotId: "c".repeat(64), parentIndex: 0 },
@@ -716,7 +698,7 @@ test("preserves whitespace, CRLF markers, multiple hunk numbering, and empty-fil
       ["empty.txt", Buffer.alloc(0)],
     ]),
   });
-  const service = createCommitDetailService(fixture.executor, (value) => value);
+  const service = createCommitDetailService(fixture.executor);
   const detail = await service.load(
     "/tmp/repository",
     { snapshotId: "d".repeat(64), parentIndex: 0 },
@@ -763,7 +745,7 @@ test("a file diff error identifies the selected file and keeps the last good det
     ]]),
     diffsByPath: new Map([["broken.txt", result(Buffer.alloc(0), 1)]]),
   });
-  const service = createCommitDetailService(fixture.executor, (value) => value);
+  const service = createCommitDetailService(fixture.executor);
   const detail = await service.load(
     "/tmp/repository",
     { snapshotId: "e".repeat(64), parentIndex: 0 },
@@ -817,7 +799,7 @@ test("missing and corrupt selected blobs have distinct safe diff errors", async 
         result(Buffer.alloc(0), 128, item.stderr),
       ]]),
     });
-    const service = createCommitDetailService(fixture.executor, (value) => value);
+    const service = createCommitDetailService(fixture.executor);
     const detail = await service.load(
       "/tmp/repository",
       { snapshotId: "f".repeat(64), parentIndex: 0 },
@@ -850,7 +832,7 @@ test("uses root comparison and exposes no parent selector for a root commit", as
     parents: [],
     filesByParent: new Map([["root", files]]),
   });
-  const service = createCommitDetailService(fixture.executor, (value) => value);
+  const service = createCommitDetailService(fixture.executor);
 
   const detail = await service.load(
     "/tmp/repository",
@@ -879,7 +861,7 @@ test("a two-parent merge defaults to parent 1 and compares each parent separatel
       [parents[1], [{ status: "M", path: "from-second.txt", additions: "0", deletions: "3" }]],
     ]),
   });
-  const service = createCommitDetailService(fixture.executor, (value) => value);
+  const service = createCommitDetailService(fixture.executor);
 
   const first = await service.load(
     "/tmp/repository",
@@ -927,7 +909,7 @@ test("switching an octopus parent atomically replaces and resets the file snapsh
       [parents[2], [{ status: "M", path: "third.txt", additions: "0", deletions: "2" }]],
     ]),
   });
-  const service = createCommitDetailService(fixture.executor, (value) => value);
+  const service = createCommitDetailService(fixture.executor);
 
   const first = await service.load(
     "/tmp/repository",
@@ -963,7 +945,7 @@ test("paginates 1,001 changed files without duplicate or missing boundaries", as
     parents,
     filesByParent: new Map([[parents[0], files]]),
   });
-  const service = createCommitDetailService(fixture.executor, (value) => value);
+  const service = createCommitDetailService(fixture.executor);
   const first = await service.load(
     "/tmp/repository",
     { snapshotId: "a".repeat(64), parentIndex: 0 },
@@ -1007,7 +989,7 @@ test("rejects stale parent and page boundaries while keeping the last good detai
     parents,
     filesByParent: new Map([[parents[0], [{ status: "M", path: "one", additions: "1", deletions: "1" }]]]),
   });
-  const service = createCommitDetailService(fixture.executor, (value) => value);
+  const service = createCommitDetailService(fixture.executor);
 
   const invalidParent = await service.load(
     "/tmp/repository",
@@ -1054,7 +1036,7 @@ test("system Git parses a root addition and a rename as complete changed-file en
   await execFile("/usr/bin/git", ["-C", repository, "commit", "-q", "-m", "rename"]);
   const renameSha = (await execFile("/usr/bin/git", ["-C", repository, "rev-parse", "HEAD"]))
     .stdout.trim();
-  const service = createCommitDetailService(undefined, (value) => value);
+  const service = createCommitDetailService();
 
   const root = await service.load(
     repository,
@@ -1123,7 +1105,7 @@ test("system Git distinguishes missing and corrupt one-sided blobs", async () =>
       parents = [addedSha];
     }
 
-    const loadedService = createCommitDetailService(undefined, (value) => value);
+    const loadedService = createCommitDetailService();
     const loaded = await loadedService.load(
       repository,
       { snapshotId: "d".repeat(64), parentIndex: 0 },
@@ -1150,7 +1132,7 @@ test("system Git distinguishes missing and corrupt one-sided blobs", async () =>
       : "Repository object is corrupt";
     const expectedCode = item.damage === "missing" ? "missing-object" : "corrupt-object";
 
-    const failedService = createCommitDetailService(undefined, (value) => value);
+    const failedService = createCommitDetailService();
     const failedLoad = await failedService.load(
       repository,
       { snapshotId: "e".repeat(64), parentIndex: 0 },
@@ -1237,7 +1219,7 @@ test("system Git selects literal pathspec-looking and invalid-byte filenames exa
     ["-C", repository, "rev-parse", "HEAD"],
   )).stdout.trim();
 
-  const service = createCommitDetailService(undefined, (value) => value);
+  const service = createCommitDetailService();
   const detail = await service.load(
     repository,
     { snapshotId: "e".repeat(64), parentIndex: 0 },
@@ -1300,7 +1282,7 @@ test("system Git renders symlink targets as plain text without following either 
     ["-C", repository, "rev-parse", "HEAD"],
   )).stdout.trim();
 
-  const service = createCommitDetailService(undefined, (value) => value);
+  const service = createCommitDetailService();
   const detail = await service.load(
     repository,
     { snapshotId: "b".repeat(64), parentIndex: 0 },
@@ -1406,7 +1388,7 @@ test("system Git shows only object IDs for gitlink add, update, delete, and type
     { parent: changedToFile, commit: changedToGitlink, oldOid: regularBlob, newOid: oldTarget },
     { parent: changedToGitlink, commit: deleted, oldOid: oldTarget, newOid: zero },
   ];
-  const service = createCommitDetailService(undefined, (value) => value);
+  const service = createCommitDetailService();
   for (const [index, fixture] of cases.entries()) {
     const detail = await service.load(
       repository,
@@ -1456,7 +1438,7 @@ test("system Git preserves commit-path text classification for a NUL-bearing blo
     ["-C", repository, "rev-parse", "HEAD"],
   )).stdout.trim();
 
-  const service = createCommitDetailService(undefined, (value) => value);
+  const service = createCommitDetailService();
   const detail = await service.load(
     repository,
     { snapshotId: "9".repeat(64), parentIndex: 0 },
@@ -1510,7 +1492,7 @@ test("system Git stops a selected large file diff at 1 MiB without changing the 
     "/usr/bin/git",
     ["-C", repository, "rev-parse", "HEAD"],
   )).stdout.trim();
-  const service = createCommitDetailService(undefined, (value) => value);
+  const service = createCommitDetailService();
   const detail = await service.load(
     repository,
     { snapshotId: "f".repeat(64), parentIndex: 0 },

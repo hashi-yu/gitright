@@ -89,7 +89,6 @@ test("loads one deterministic Text topology snapshot through the history service
   const mergeRow = snapshot.commits[0];
   assert.equal(mergeRow.subject, "Merge three lines");
   assert.equal(mergeRow.shortSha, merge.slice(0, 7));
-  assert.equal(mergeRow.relativeCommitterTime, "5 minutes ago");
   assert.equal(mergeRow.topologyRole, "octopus merge");
   assert.equal(mergeRow.shallowBoundary, false);
   assert.deepEqual(mergeRow.parents, [

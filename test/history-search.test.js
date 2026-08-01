@@ -19,7 +19,6 @@ function commit(index) {
         ? [{ name: "release/candidate", fullName: "refs/heads/release/candidate" }]
         : [],
     parents: index === 91 ? [{ sha: "f".repeat(40), loaded: false }] : [],
-    relativeCommitterTime: index === 91 ? "secret-time-token" : "1 minute ago",
   };
 }
 
@@ -36,7 +35,6 @@ test("matches loaded subjects, SHAs, and complete refs without filtering rows", 
   assert.deepEqual(matchLoadedHistory(commits, "release/CANDIDATE").matchOrder, [
     commits[233].sha,
   ]);
-  assert.deepEqual(matchLoadedHistory(commits, "secret-time-token").matchOrder, []);
   assert.deepEqual(matchLoadedHistory(commits, "f".repeat(40)).matchOrder, []);
   assert.equal(matchLoadedHistory(commits, ""), EMPTY_HISTORY_SEARCH_MATCHES);
   assert.equal(matchLoadedHistory(commits, "   "), EMPTY_HISTORY_SEARCH_MATCHES);

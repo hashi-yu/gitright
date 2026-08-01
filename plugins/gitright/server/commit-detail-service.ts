@@ -35,11 +35,6 @@ const systemCommitDetailExecutor: CommitDetailExecutor = {
     systemGitExecutor.repository(repository, operation, objectIds, pathspecs),
 };
 
-export type CommitDate = {
-  recorded: string;
-  local: string;
-};
-
 export type ChangedFile = {
   fileId: string;
   status: "added" | "modified" | "deleted" | "renamed" | "type-changed" | "unknown";
@@ -56,8 +51,8 @@ export type ReadyCommitDetail = {
   sha: string;
   message: string;
   authorName: string;
-  authorDate: CommitDate;
-  committerDate: CommitDate;
+  authorDate: string;
+  committerDate: string;
   parents: string[];
   refs: HistoryRef[];
   selectedParentIndex: number | null;
@@ -706,16 +701,8 @@ function readyFileDiff(
   };
 }
 
-function defaultLocalDate(value: string): string {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "long",
-  }).format(new Date(value));
-}
-
 export function createCommitDetailService(
   executor: CommitDetailExecutor = systemCommitDetailExecutor,
-  formatLocalDate: (value: string) => string = defaultLocalDate,
 ) {
   let active: ActiveDetail | null = null;
   let generation = 0;
@@ -848,14 +835,8 @@ export function createCommitDetailService(
       sha: parsedDetail.sha,
       message: parsedDetail.message,
       authorName: parsedDetail.authorName,
-      authorDate: {
-        recorded: parsedDetail.authorDate,
-        local: formatLocalDate(parsedDetail.authorDate),
-      },
-      committerDate: {
-        recorded: parsedDetail.committerDate,
-        local: formatLocalDate(parsedDetail.committerDate),
-      },
+      authorDate: parsedDetail.authorDate,
+      committerDate: parsedDetail.committerDate,
       parents,
       refs: binding.refs.map((ref) => ({ ...ref })),
       selectedParentIndex,

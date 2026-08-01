@@ -242,6 +242,9 @@ export async function startPackagedAppHost({
       viewport,
       deviceScaleFactor: 1,
       reducedMotion,
+      // The widget formats absolute commit times in the viewer's timezone, so
+      // the fixture pins one instead of inheriting the runner's.
+      timezoneId: "UTC",
     });
     await context.route(/^https?:/, (route) => {
       networkRequests.push(route.request().url());
