@@ -289,6 +289,116 @@ test("an advertised bound the host overruns still reaches the view", () => {
   );
 });
 
+function readyHistory(commitOverrides = {}, overrides = {}) {
+  const sha = "a".repeat(40);
+  return {
+    status: "ready",
+    snapshotId: "b".repeat(64),
+    snapshotTime: 1800000000,
+    refFingerprint: "c".repeat(64),
+    headSha: sha,
+    loadedCount: 1,
+    pageSize: 500,
+    hasContinuation: false,
+    hasMore: false,
+    commits: [{
+      sha,
+      shortSha: sha.slice(0, 7),
+      subject: "example",
+      committerTime: 1800000000,
+      relativeCommitterTime: "1 hour ago",
+      topologyRole: "root",
+      shallowBoundary: false,
+      parents: [],
+      refs: [],
+      inlineRefs: [],
+      additionalRefCount: 0,
+      ...commitOverrides,
+    }],
+    selection: { status: "none" },
+    ...overrides,
+  };
+}
+
+test("a number the host sends is accepted on its type alone", () => {
+  assert.equal(validate.historySnapshot(readyHistory()), true);
+  for (const committerTime of [Number.NaN, Number.POSITIVE_INFINITY, -0.5]) {
+    assert.equal(
+      validate.historySnapshot(readyHistory({ committerTime })),
+      true,
+      `committerTime ${committerTime} must still reach the view`,
+    );
+  }
+  assert.equal(
+    validate.historySnapshot(readyHistory({ additionalRefCount: Number.NaN })),
+    true,
+  );
+  assert.equal(
+    validate.historySnapshot(readyHistory({}, { snapshotTime: Number.NaN })),
+    true,
+  );
+  assert.equal(validate.historySnapshot(readyHistory({ committerTime: "1" })), false);
+});
+
+test("a field the previous seam compared as text keeps accepting that text", () => {
+  assert.equal(
+    validate.historySnapshot(readyHistory({ topologyRole: ["root"] })),
+    true,
+  );
+  assert.equal(
+    validate.historySnapshot(
+      readyHistory({ parents: [{ sha: ["d".repeat(40)], loaded: true }] }),
+    ),
+    true,
+  );
+  assert.equal(
+    validate.historySnapshot(
+      readyHistory({
+        refs: [{
+          name: "main",
+          fullName: "refs/heads/main",
+          kind: ["head"],
+          checkedOut: true,
+        }],
+      }),
+    ),
+    true,
+  );
+  assert.equal(
+    validate.historySnapshot(
+      readyHistory({}, { selection: { status: ["reachable"], sha: "a".repeat(40) } }),
+    ),
+    true,
+  );
+  assert.equal(
+    validate.fileDiffError({
+      status: "error",
+      message: ["File diff is unavailable"],
+      code: "file-diff-read-failed",
+      detailId: "d".repeat(64),
+      fileId: "f".repeat(64),
+      path: null,
+    }),
+    true,
+  );
+  assert.equal(
+    validate.fileDiff(readyFileDiff({ truncated: true, truncatedBy: ["bytes"] })),
+    true,
+  );
+  assert.equal(
+    validate.fileDiff(
+      readyFileDiff({
+        lines: [{ kind: ["context"], content: " x", oldLine: 1, newLine: 1 }],
+      }),
+    ),
+    true,
+  );
+  assert.equal(
+    validate.historySnapshot(readyHistory({ topologyRole: ["root", "commit"] })),
+    false,
+  );
+});
+
 test("the advertised schema still declares the bounds validation tolerates", () => {
   const unavailable = outputSchemas.repositoryState.oneOf[1];
   assert.deepEqual(unavailable.properties.message, {

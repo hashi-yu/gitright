@@ -16,8 +16,10 @@ import {
   nullable,
   num,
   object,
+  rawNumber,
   str,
   stringEnum,
+  stringified,
   union,
   type SchemaNode,
 } from "./schema.ts";
@@ -58,7 +60,7 @@ function boundedCount(maximum: number): SchemaNode {
 function boundedError(message: string, codes: readonly string[]): SchemaNode {
   return object({
     status: constant("error"),
-    message: constant(message),
+    message: stringified(constant(message)),
     code: errorCode(codes),
   });
 }
@@ -66,7 +68,7 @@ function boundedError(message: string, codes: readonly string[]): SchemaNode {
 function boundedFileDiffError(message: string, codes: readonly string[]): SchemaNode {
   return object({
     status: constant("error"),
-    message: constant(message),
+    message: stringified(constant(message)),
     code: errorCode(codes),
     detailId: opaqueId,
     fileId: opaqueId,
@@ -77,7 +79,7 @@ function boundedFileDiffError(message: string, codes: readonly string[]): Schema
 export const historyRef = object({
   name: str(),
   fullName: str(),
-  kind: stringEnum(["head", "local-branch", "remote-branch", "tag"]),
+  kind: stringified(stringEnum(["head", "local-branch", "remote-branch", "tag"])),
   checkedOut: bool(),
 });
 
@@ -86,14 +88,14 @@ export const historyCommit = object(
     sha,
     shortSha: str({ pattern: "^[0-9a-f]{7,40}$" }),
     subject: str(),
-    committerTime: advertised(int(), num()),
+    committerTime: advertised(int(), rawNumber()),
     relativeCommitterTime: str(),
-    topologyRole: stringEnum(["root", "commit", "merge", "octopus merge"]),
+    topologyRole: stringified(stringEnum(["root", "commit", "merge", "octopus merge"])),
     shallowBoundary: bool(),
-    parents: array(object({ sha, loaded: bool() })),
+    parents: array(object({ sha: stringified(sha), loaded: bool() })),
     refs: array(historyRef),
     inlineRefs: array(historyRef),
-    additionalRefCount: advertised(int({ minimum: 0 }), num()),
+    additionalRefCount: advertised(int({ minimum: 0 }), rawNumber()),
   },
   {
     refine: (commit) =>
@@ -107,7 +109,10 @@ export const historySelection = union([
     { status: constant("none") },
     { refine: (selection) => !("sha" in selection) },
   ),
-  object({ status: stringEnum(["reachable", "unreachable", "missing"]), sha }),
+  object({
+    status: stringified(stringEnum(["reachable", "unreachable", "missing"])),
+    sha,
+  }),
 ]);
 
 const historyCaptureUnavailableCodes = [
@@ -172,7 +177,7 @@ export const readyHistory = object(
   {
     status: constant("ready"),
     snapshotId: opaqueId,
-    snapshotTime: advertised(int(), num()),
+    snapshotTime: advertised(int(), rawNumber()),
     refFingerprint: opaqueId,
     headSha: nullableSha,
     loadedCount: advertised(
@@ -219,14 +224,9 @@ export const historyChanged = object({
 export const changedFile = object(
   {
     fileId: opaqueId,
-    status: stringEnum([
-      "added",
-      "modified",
-      "deleted",
-      "renamed",
-      "type-changed",
-      "unknown",
-    ]),
+    status: stringified(
+      stringEnum(["added", "modified", "deleted", "renamed", "type-changed", "unknown"]),
+    ),
     path: str(),
     oldPath: nullableString,
     additions: nullableInteger,
@@ -344,7 +344,9 @@ export const fileDiffError = union([
 
 export const fileDiffLine = object(
   {
-    kind: stringEnum(["header", "hunk", "context", "addition", "deletion", "meta"]),
+    kind: stringified(
+      stringEnum(["header", "hunk", "context", "addition", "deletion", "meta"]),
+    ),
     content: str(),
     oldLine: nullableInteger,
     newLine: nullableInteger,
@@ -366,7 +368,7 @@ export const readyFileDiff = object(
     bytes: int({ minimum: 0, maximum: MAX_DIFF_BYTES }),
     lineCount: int({ minimum: 0, maximum: MAX_DIFF_LINES }),
     truncated: bool(),
-    truncatedBy: nullable(stringEnum(["bytes", "lines"])),
+    truncatedBy: nullable(stringified(stringEnum(["bytes", "lines"]))),
     lines: array(fileDiffLine),
   },
   {

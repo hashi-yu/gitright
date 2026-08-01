@@ -77,6 +77,19 @@ export function num(options: { minimum?: number; maximum?: number } = {}): Schem
   });
 }
 
+/**
+ * A number the previous seam accepted on `typeof` alone. Only ever the
+ * accepted half of {@link advertised}: NaN and the infinities are not
+ * representable in JSON, but the widget used to let them through, and this
+ * change is not the place to start rejecting them.
+ */
+export function rawNumber(): SchemaNode {
+  return node({
+    toJsonSchema: () => ({ type: "number" }),
+    check: (value) => typeof value === "number",
+  });
+}
+
 export function bool(): SchemaNode {
   return node({
     toJsonSchema: () => ({ type: "boolean" }),
@@ -118,6 +131,20 @@ export function advertised(shown: SchemaNode, accepted: SchemaNode): SchemaNode 
     restore: accepted.restore,
     matches: accepted.matches,
   };
+}
+
+/**
+ * A field the previous seam compared after `String(...)`, so a value that
+ * stringifies to the expected text — a single-element array, most visibly —
+ * was accepted. The advertised schema stays exact; only receipt is this loose.
+ */
+export function stringified(inner: SchemaNode): SchemaNode {
+  return node({
+    discriminating: inner.discriminating,
+    toJsonSchema: inner.toJsonSchema,
+    check: (value) => inner.check(String(value)),
+    matches: (value) => inner.matches(String(value)),
+  });
 }
 
 export function nullable(inner: SchemaNode): SchemaNode {
