@@ -8,6 +8,7 @@
  */
 
 import {
+  advertised,
   array,
   bool,
   constant,
@@ -38,11 +39,27 @@ function isCount(value: unknown): boolean {
   return value === null || (Number.isSafeInteger(value) && (value as number) >= 0);
 }
 
+/**
+ * An error code is advertised as one of a tool's declared codes, but any code
+ * the host sends still reaches the notice the widget shows for it.
+ */
+function errorCode(codes: readonly string[]): SchemaNode {
+  return advertised(
+    codes.length === 1 ? constant(codes[0]) : stringEnum(codes),
+    str(),
+  );
+}
+
+/** Advertised as a count within the snapshot limit, accepted as any count. */
+function boundedCount(maximum: number): SchemaNode {
+  return advertised(int({ minimum: 0, maximum }), int({ minimum: 0 }));
+}
+
 function boundedError(message: string, codes: readonly string[]): SchemaNode {
   return object({
     status: constant("error"),
     message: constant(message),
-    code: codes.length === 1 ? constant(codes[0]) : stringEnum(codes),
+    code: errorCode(codes),
   });
 }
 
@@ -50,7 +67,7 @@ function boundedFileDiffError(message: string, codes: readonly string[]): Schema
   return object({
     status: constant("error"),
     message: constant(message),
-    code: codes.length === 1 ? constant(codes[0]) : stringEnum(codes),
+    code: errorCode(codes),
     detailId: opaqueId,
     fileId: opaqueId,
     path: nullableString,
@@ -69,14 +86,14 @@ export const historyCommit = object(
     sha,
     shortSha: str({ pattern: "^[0-9a-f]{7,40}$" }),
     subject: str(),
-    committerTime: int(),
+    committerTime: advertised(int(), num()),
     relativeCommitterTime: str(),
     topologyRole: stringEnum(["root", "commit", "merge", "octopus merge"]),
     shallowBoundary: bool(),
     parents: array(object({ sha, loaded: bool() })),
     refs: array(historyRef),
     inlineRefs: array(historyRef),
-    additionalRefCount: int({ minimum: 0 }),
+    additionalRefCount: advertised(int({ minimum: 0 }), num()),
   },
   {
     refine: (commit) =>
@@ -86,7 +103,10 @@ export const historyCommit = object(
 );
 
 export const historySelection = union([
-  object({ status: constant("none") }),
+  object(
+    { status: constant("none") },
+    { refine: (selection) => !("sha" in selection) },
+  ),
   object({ status: stringEnum(["reachable", "unreachable", "missing"]), sha }),
 ]);
 
@@ -152,10 +172,13 @@ export const readyHistory = object(
   {
     status: constant("ready"),
     snapshotId: opaqueId,
-    snapshotTime: int(),
+    snapshotTime: advertised(int(), num()),
     refFingerprint: opaqueId,
     headSha: nullableSha,
-    loadedCount: int({ minimum: 0, maximum: MAX_LOADED }),
+    loadedCount: advertised(
+      int({ minimum: 0, maximum: MAX_LOADED }),
+      num({ minimum: 0, maximum: MAX_LOADED }),
+    ),
     pageSize: constant(PAGE_SIZE),
     hasContinuation: bool(),
     hasMore: bool(),
@@ -170,7 +193,7 @@ export const readyHistoryPage = object(
     status: constant("ready"),
     snapshotId: opaqueId,
     refFingerprint: opaqueId,
-    previousLoadedCount: int({ minimum: 0, maximum: MAX_LOADED }),
+    previousLoadedCount: boundedCount(MAX_LOADED),
     previousLastCommitSha: nullableSha,
     loadedCount: int({ minimum: 0, maximum: MAX_LOADED }),
     pageSize: constant(PAGE_SIZE),
@@ -252,12 +275,12 @@ export const readyCommitDetail = object(
     selectedParentIndex: nullableInteger,
     selectedParentSha: nullableSha,
     summary: object({
-      totalFiles: int({ minimum: 0, maximum: MAX_LOADED }),
+      totalFiles: boundedCount(MAX_LOADED),
       additions: int({ minimum: 0 }),
       deletions: int({ minimum: 0 }),
-      binaryFiles: int({ minimum: 0, maximum: MAX_LOADED }),
+      binaryFiles: boundedCount(MAX_LOADED),
     }),
-    loadedFileCount: int({ minimum: 0, maximum: MAX_LOADED }),
+    loadedFileCount: boundedCount(MAX_LOADED),
     totalFileCount: int({ minimum: 0, maximum: MAX_LOADED }),
     filePageSize: constant(PAGE_SIZE),
     hasMoreFiles: bool(),
@@ -290,9 +313,9 @@ export const changedFilePage = object(
   {
     status: constant("ready"),
     detailId: opaqueId,
-    previousLoadedCount: int({ minimum: 0, maximum: MAX_LOADED }),
+    previousLoadedCount: boundedCount(MAX_LOADED),
     previousLastFileId: nullableOpaqueId,
-    loadedCount: int({ minimum: 0, maximum: MAX_LOADED }),
+    loadedCount: boundedCount(MAX_LOADED),
     totalCount: int({ minimum: 0, maximum: MAX_LOADED }),
     pageSize: constant(PAGE_SIZE),
     hasMoreFiles: bool(),
@@ -368,12 +391,20 @@ export const launch = object(
   { optional: ["reasonCode"] },
 );
 
-const gitVersion = str({ pattern: "^\\d+\\.\\d+\\.\\d+$" });
+const gitVersion = advertised(str({ pattern: "^\\d+\\.\\d+\\.\\d+$" }), str());
+
+/**
+ * Repository state is shown to the user as prose, so the wording is advertised
+ * but any wording the host sends is displayed rather than dropped.
+ */
+function advertisedWording(shown: SchemaNode): SchemaNode {
+  return advertised(shown, str());
+}
 
 export const repositoryState = union([
   object({
     status: constant("ready"),
-    message: constant("Repository ready"),
+    message: advertisedWording(constant("Repository ready")),
     repositoryName: str(),
     repositoryPath: str(),
     repositoryKind: stringEnum(["repository", "linked-worktree"]),
@@ -383,29 +414,33 @@ export const repositoryState = union([
   }),
   object({
     status: constant("unavailable"),
-    message: constant("Current task repository is unavailable"),
+    message: advertisedWording(constant("Current task repository is unavailable")),
   }),
   object({
     status: constant("unsupported"),
-    message: stringEnum([
-      "Bare repositories are not supported in this version",
-      "Partial clones are not supported in this version",
-      "SHA-256 repositories are not supported in this version",
-    ]),
+    message: advertisedWording(
+      stringEnum([
+        "Bare repositories are not supported in this version",
+        "Partial clones are not supported in this version",
+        "SHA-256 repositories are not supported in this version",
+      ]),
+    ),
     gitVersion,
   }),
   object({
     status: constant("ownership-refused"),
-    message: constant("Git refused this repository because its ownership is not trusted"),
-    guidance: constant(
-      "Resolve the repository trust outside GitRight, then open a new task",
+    message: advertisedWording(
+      constant("Git refused this repository because its ownership is not trusted"),
+    ),
+    guidance: advertisedWording(
+      constant("Resolve the repository trust outside GitRight, then open a new task"),
     ),
     gitVersion,
   }),
   object({
     status: constant("blocked"),
-    message: constant("Git 2.30.0 or newer is required"),
-    requiredGitVersion: constant("2.30.0"),
+    message: advertisedWording(constant("Git 2.30.0 or newer is required")),
+    requiredGitVersion: advertisedWording(constant("2.30.0")),
     detectedGitVersion: str(),
     durationMs: num({ minimum: 0 }),
     errorCode: constant("git-version-blocked"),

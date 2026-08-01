@@ -253,10 +253,49 @@ test("validation accepts a payload that satisfies the advertised shape", () => {
   );
 });
 
-test("validation rejects undeclared fields and out-of-bounds values", () => {
-  assert.equal(validate.fileDiff(readyFileDiff({ surprise: 1 })), false);
+test("validation rejects a payload the widget cannot render", () => {
   assert.equal(validate.fileDiff(readyFileDiff({ bytes: -1 })), false);
   assert.equal(validate.fileDiff(readyFileDiff({ detailId: "short" })), false);
+  assert.equal(validate.fileDiff(readyFileDiff({ path: undefined })), false);
+});
+
+test("an advertised bound the host overruns still reaches the view", () => {
+  assert.equal(validate.fileDiff(readyFileDiff({ surprise: 1 })), true);
+  assert.equal(
+    validate.fileDiffError({
+      status: "error",
+      message: "File diff is unavailable",
+      code: "an-undeclared-code",
+      detailId: "d".repeat(64),
+      fileId: "f".repeat(64),
+      path: null,
+    }),
+    true,
+  );
+  assert.equal(
+    validate.repositoryState({
+      status: "unavailable",
+      message: "Wording this build does not declare",
+    }),
+    true,
+  );
+  assert.equal(
+    validate.repositoryState({
+      status: "unsupported",
+      message: "Bare repositories are not supported in this version",
+      gitVersion: "2.51",
+    }),
+    true,
+  );
+});
+
+test("the advertised schema still declares the bounds validation tolerates", () => {
+  const unavailable = outputSchemas.repositoryState.oneOf[1];
+  assert.deepEqual(unavailable.properties.message, {
+    const: "Current task repository is unavailable",
+  });
+  const readyDiff = outputSchemas.fileDiff.oneOf[0];
+  assert.equal(readyDiff.additionalProperties, false);
 });
 
 test("validation enforces the invariants JSON Schema cannot carry", () => {
@@ -283,7 +322,24 @@ test("validation accepts either tool's bounded error behind one seam notice", ()
   assert.equal(validate.commitDetailError(detailError), true);
   assert.equal(validate.commitDetailError(pageError), true);
   assert.equal(
-    validate.commitDetailError({ ...detailError, code: "not-a-real-code" }),
+    validate.commitDetailError({ ...detailError, message: "Not a declared message" }),
     false,
   );
+});
+
+test("host-omitted nullable repository fields normalize before validation", () => {
+  const hostState = {
+    status: "ready",
+    message: "Repository ready",
+    repositoryName: "example",
+    repositoryPath: "/example",
+    repositoryKind: "repository",
+    gitVersion: "2.51.0",
+  };
+
+  const normalized = restoreOmittedNulls.repositoryState(hostState);
+  assert.deepEqual(normalized, { ...hostState, branch: null, worktreeName: null });
+  assert.equal("branch" in hostState, false, "input was mutated");
+  assert.equal(validate.repositoryState(hostState), false);
+  assert.equal(validate.repositoryState(normalized), true);
 });

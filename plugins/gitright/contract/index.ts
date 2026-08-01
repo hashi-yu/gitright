@@ -40,6 +40,7 @@ export const validate = {
 };
 
 export const restoreOmittedNulls = {
+  repositoryState: (value: unknown): unknown => payloads.repositoryState.restore(value),
   history: (value: unknown): unknown => payloads.history.restore(value),
   historyPage: (value: unknown): unknown => payloads.historyPage.restore(value),
   commitDetail: (value: unknown): unknown => payloads.commitDetail.restore(value),

@@ -66,13 +66,14 @@ export function int(options: { minimum?: number; maximum?: number } = {}): Schem
   });
 }
 
-export function num(options: { minimum?: number } = {}): SchemaNode {
+export function num(options: { minimum?: number; maximum?: number } = {}): SchemaNode {
   return node({
     toJsonSchema: () => ({ type: "number", ...options }),
     check: (value) =>
       typeof value === "number" &&
       Number.isFinite(value) &&
-      (options.minimum === undefined || value >= options.minimum),
+      (options.minimum === undefined || value >= options.minimum) &&
+      (options.maximum === undefined || value <= options.maximum),
   });
 }
 
@@ -99,6 +100,24 @@ export function stringEnum(values: readonly string[]): SchemaNode {
     check: (value) => typeof value === "string" && values.includes(value),
     matches: (value) => typeof value === "string" && values.includes(value),
   });
+}
+
+/**
+ * A bound the seam advertises but does not enforce on receipt.
+ *
+ * The widget falls back only for a payload it cannot render, so a value that
+ * overruns an advertised bound still reaches the view. `shown` is what the
+ * host is told to expect; `accepted` is what the widget tolerates.
+ */
+export function advertised(shown: SchemaNode, accepted: SchemaNode): SchemaNode {
+  return {
+    nullable: accepted.nullable,
+    discriminating: accepted.discriminating,
+    toJsonSchema: shown.toJsonSchema,
+    check: accepted.check,
+    restore: accepted.restore,
+    matches: accepted.matches,
+  };
 }
 
 export function nullable(inner: SchemaNode): SchemaNode {
@@ -159,10 +178,11 @@ export function object(
       required,
       additionalProperties: false,
     }),
+    // Undeclared fields are advertised as rejected but tolerated on receipt: a
+    // host that adds a field must not cost the widget a payload it can render.
     check: (value) => {
       if (!isRecord(value)) return false;
       if (required.some((key) => !(key in value))) return false;
-      if (Object.keys(value).some((key) => !(key in properties))) return false;
       if (entries.some(([key, property]) => key in value && !property.check(value[key]))) {
         return false;
       }

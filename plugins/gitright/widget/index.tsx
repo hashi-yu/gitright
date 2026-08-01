@@ -388,7 +388,7 @@ window.addEventListener(
       return;
     }
     if (message.method === "ui/notifications/tool-result") {
-      if (isRepositoryState(repositoryStateFromToolResult(message.params))) {
+      if (isRepositoryState(receivedRepositoryState(message.params))) {
         toolResultStore.publish(message.params);
       }
       return;
@@ -428,6 +428,11 @@ function initializeBridge(): Promise<HostEnvironment> {
 
 function isRepositoryState(value: unknown): value is Exclude<RepositoryState, { status: "loading" }> {
   return validate.repositoryState(value);
+}
+
+/** Repository state as the widget uses it: nullable fields the host omitted restored. */
+function receivedRepositoryState(toolResult: unknown): unknown {
+  return restoreOmittedNulls.repositoryState(repositoryStateFromToolResult(toolResult));
 }
 
 function isHistorySnapshot(value: unknown): value is HistorySnapshot {
@@ -1866,7 +1871,7 @@ function GitRightView({
         await initializeBridge();
         if (!active) return;
         setHandoffModality(currentConversationHandoffModality);
-        let initialRepositoryState = repositoryStateFromToolResult(
+        let initialRepositoryState = receivedRepositoryState(
           await toolResultStore.waitForLatest(250),
         );
         if (!isRepositoryState(initialRepositoryState)) {
@@ -1874,7 +1879,9 @@ function GitRightView({
             name: "get_repository_state",
             arguments: {},
           })) as { structuredContent?: unknown };
-          initialRepositoryState = repositoryResult?.structuredContent;
+          initialRepositoryState = restoreOmittedNulls.repositoryState(
+            repositoryResult?.structuredContent,
+          );
         }
         if (!isRepositoryState(initialRepositoryState)) {
           throw new Error("GitRight received an invalid repository state");
@@ -1931,7 +1938,7 @@ function GitRightView({
   }, [restoredWidgetState]);
 
   useEffect(() => toolResultStore.subscribe((result) => {
-    const repositoryState = repositoryStateFromToolResult(result);
+    const repositoryState = receivedRepositoryState(result);
     if (isRepositoryState(repositoryState)) setState(repositoryState);
   }), []);
 
