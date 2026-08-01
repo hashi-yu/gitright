@@ -2,8 +2,9 @@ import { spawn } from "node:child_process";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
+
+import { createMcpClient } from "./mcp-client.js";
 
 export const repositoryRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -41,44 +42,27 @@ export async function runPluginConversation(interact) {
     cwd: pluginRoot,
     env: { HOME: path.join(root, "home"), PATH: process.env.PATH },
   });
-  const lines = createInterface({ input: child.stdout, crlfDelay: Infinity });
-  const waiters = new Map();
-  let stderr = "";
-  lines.on("line", (line) => {
-    const response = JSON.parse(line);
-    const waiter = waiters.get(response.id);
-    if (!waiter) return;
-    waiters.delete(response.id);
-    waiter.resolve(response);
+  const client = createMcpClient({
+    input: child.stdout,
+    output: child.stdin,
+    closedError: () => new Error("plugin process closed before responding"),
+    rejectPendingOnInvalidJson: false,
   });
+  let stderr = "";
   child.stderr.on("data", (chunk) => {
     stderr += chunk;
   });
 
-  function request(message) {
-    return new Promise((resolve, reject) => {
-      if (waiters.has(message.id)) {
-        reject(new Error(`duplicate request id: ${message.id}`));
-        return;
-      }
-      waiters.set(message.id, { resolve, reject });
-      child.stdin.write(`${JSON.stringify(message)}\n`);
-    });
-  }
-
   const completion = new Promise((resolve, reject) => {
     child.on("error", reject);
     child.on("close", (code, signal) => {
-      for (const waiter of waiters.values()) {
-        waiter.reject(new Error("plugin process closed before responding"));
-      }
-      waiters.clear();
+      client.processClosed({ code, signal });
       resolve({ code, signal });
     });
   });
 
   try {
-    const value = await interact(request);
+    const value = await interact(client.sendRequest);
     child.stdin.end();
     const closed = await completion;
     return { ...closed, stderr, value };
