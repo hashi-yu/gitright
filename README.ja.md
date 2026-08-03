@@ -11,7 +11,7 @@ GitRight はベータ版です。インターフェースやインストール�
 
 ## 動作条件
 
-- macOS（Apple silicon `arm64` または Intel `x86_64`）
+- macOS（Apple silicon `arm64`）
 - プラグインとフルスクリーン MCP Apps に対応した Codex
 - Git 2.30.0 以降
 - Bun ランタイム (`>=1.3.14 <2.0.0`)
