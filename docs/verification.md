@@ -32,6 +32,9 @@ both rebuilds match the current `dist/` reference; its output records whether
 that reference is local build output or a committed release payload. A release
 claim is valid only for the latter.
 
+`proof:dist` runs for release candidates and for changes to the launcher,
+widget, or server build, not for every pull request.
+
 `proof:distribution` stages only the current installable plugin package,
 exercises the runtime preflight and a representative read-only operation, and
 verifies runtime operation with network access denied.
@@ -48,6 +51,10 @@ Release verification exercises both Git 2.30.0 and the current macOS system Git.
 The proof covers history, repository state, commit detail, diffs, cancellation,
 and adversarial repository configuration.
 
+The Git 2.30.0 lane builds the minimum from source, so it runs for release
+candidates and for changes to the Git command layer it verifies, not for every
+pull request.
+
 ## Read-only and offline security
 
 ```sh
@@ -61,19 +68,27 @@ network requests, or leave child processes running.
 
 ## Visual evidence
 
-The committed visual baseline under
-`docs/proofs/fixtures/visual-baseline/reference/` contains product-only captures
-for launcher, history, search, and diff surfaces at 380 and 720 CSS px, in light
-and dark themes and English and Japanese. Lifecycle cases cover loading, empty,
-unavailable, and error states. Its manifest binds every capture to exact package
-inputs, and the adjacent attestation records human review.
+The committed visual baseline lives under
+`docs/proofs/fixtures/visual-baseline/reference/`. Its reviewed reference set
+is five product-only captures: history at 380 CSS px in dark and Japanese, diff
+at 380 CSS px in light and English, search at 720 CSS px in light and Japanese,
+the unavailable state at 720 CSS px in dark and English, and the launcher with
+its hint visible at 380 CSS px in dark. Together they cover every pairwise
+combination of pane width, theme, and locale plus the most recently redesigned
+surface. The remaining lifecycle states and combinations stay covered by the
+automated browser tests.
+
+Its manifest records the capture conditions, including the host-surface
+fallback colors, without hash chains. The adjacent attestation is a few lines:
+the review date, the candidate commit, the reviewed captures, and the result.
 
 No automated test compares these images; they are the reference for the
 release-time visual review.
 
-If a package input changes, the baseline must be regenerated and reviewed before
-release. Raw host screenshots, personal environment data, and unrelated host
-state are not public verification evidence.
+The baseline must be regenerated and reviewed before release when a change
+visibly affects layout, color, typography, or interaction hierarchy. Raw host
+screenshots, personal environment data, and unrelated host state are not public
+verification evidence.
 
 ## README screenshots
 

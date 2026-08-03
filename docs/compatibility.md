@@ -5,7 +5,7 @@
 | Surface | Supported range |
 | --- | --- |
 | Operating system | macOS |
-| Architecture | native `arm64` and native `x86_64` |
+| Architecture | native `arm64` |
 | Bun runtime | `>=1.3.14 <2.0.0` |
 | Git | 2.30.0 or later, including the current macOS system Git |
 | Host | Codex with plugin and fullscreen MCP Apps support |
@@ -13,13 +13,16 @@
 | Language | English and Japanese |
 | Theme | Light and dark |
 
-GitRight ships one JavaScript-based plugin package for both supported Mac
-architectures. It does not bundle Bun or select an architecture-specific
-server.
+GitRight ships one architecture-neutral JavaScript-based plugin package. It
+does not bundle Bun or select an architecture-specific server.
+
+Because the package is architecture-neutral, it may run on native `x86_64`,
+but `x86_64` is unverified and is not a supported beta environment.
+Compatibility reports from `x86_64` are welcome and handled on a best-effort
+basis.
 
 No minimum macOS release is claimed independently of the supported Codex host,
-Bun 1.x, and Git versions. Native Intel support is verified on fresh
-`x86_64` macOS runners; physical Intel hardware validation is not claimed.
+Bun 1.x, and Git versions.
 
 ## Runtime behavior
 

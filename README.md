@@ -13,7 +13,7 @@ between beta releases.
 
 ## Requirements
 
-- macOS on Apple silicon (`arm64`) or Intel (`x86_64`)
+- macOS on Apple silicon (`arm64`)
 - Codex with plugin and fullscreen MCP Apps support
 - Git 2.30.0 or later
 - A user-provided Bun runtime in the range `>=1.3.14 <2.0.0`

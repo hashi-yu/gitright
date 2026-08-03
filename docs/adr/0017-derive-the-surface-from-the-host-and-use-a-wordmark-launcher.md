@@ -47,3 +47,7 @@ sheet's fixed color reduce the sheet's lift to its hairline and shadow; this is
 accepted. The ADR-0011 visual baseline must be regenerated and re-attested
 before the next release, since these are package-input changes that repaint
 every capture.
+
+Amendment 2026-08-03: that regeneration duty now reads against ADR-0018's five
+reviewed reference captures and its visual-impact condition instead of
+ADR-0011; the product decision recorded here is unchanged.
