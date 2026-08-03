@@ -1,6 +1,6 @@
 ---
 status: accepted
-amended: 2026-07-14
+amended: 2026-08-03
 ---
 
 # Use a user-provided Bun runtime for beta distribution
@@ -24,3 +24,5 @@ Release candidates also receive a real ChatGPT/Codex marketplace smoke test on a
 The original workflow ran the full fresh arm64 and Intel matrix for every pull-request update. On 2026-07-14, routine same-repository pull requests moved to a trusted self-hosted arm64 runner to prevent ordinary development iterations from exhausting GitHub-hosted macOS minutes. The fresh native two-architecture matrix remains a mandatory release-candidate gate and is dispatched only for a candidate intended to advance `beta`.
 
 On 2026-07-21, the public-repository decision moved routine pull-request validation back to GitHub-hosted runners so external fork pull requests receive CI without exposing a maintainer machine to untrusted code. Public CI is kept separate from dedicated self-hosted visual validation and private physical-host acceptance.
+
+On 2026-08-03, ADR-0019 narrowed the supported architecture to native arm64 and removed the fresh Intel proof lane, so the release-candidate matrix is arm64 only. ADR-0018 right-sized when the remaining release-candidate proofs run: they run for release candidates and for changes to the layers they verify rather than on a fixed per-update cadence. The decision to use a user-provided Bun runtime is unchanged and remains accepted.

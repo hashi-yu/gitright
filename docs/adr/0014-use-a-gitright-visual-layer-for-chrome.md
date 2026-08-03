@@ -16,3 +16,5 @@ This supersedes ADR-0007 because the redesign approved on 2026-07-16 — the rou
 ## Consequences
 
 The `@openai/apps-sdk-ui` dependency is removed from the widget payload; reintroducing it or adopting another UI dependency requires a new decision. Bundle size, deterministic `dist`, empty CSP allowlists, and installed-offline behavior are re-verified after the swap. Accessibility, theme, localization, resizing, and the ADR-0011 visual acceptance gate apply unchanged. Additions or exceptions to the GitRight token set require a specification change rather than ad hoc CSS values.
+
+Amendment 2026-08-03: the visual truth for acceptance now reads against ADR-0018's five reviewed reference captures and its visual-impact regeneration condition instead of ADR-0011; the product decision recorded here is unchanged.
