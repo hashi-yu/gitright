@@ -69,18 +69,21 @@ network requests, or leave child processes running.
 ## Visual evidence
 
 The committed visual baseline lives under
-`docs/proofs/fixtures/visual-baseline/reference/`. Its reviewed reference set
-is five product-only captures: history at 380 CSS px in dark and Japanese, diff
-at 380 CSS px in light and English, search at 720 CSS px in light and Japanese,
-the unavailable state at 720 CSS px in dark and English, and the launcher with
-its hint visible at 380 CSS px in dark. Together they cover every pairwise
+`docs/proofs/fixtures/visual-baseline/reference/`. Its reference set is five
+product-only captures: history at 380 CSS px in dark and Japanese, diff at 380
+CSS px in light and English, search at 720 CSS px in light and Japanese, the
+unavailable state at 720 CSS px in dark and English, and the launcher with its
+hint visible at 380 CSS px in dark. Together they cover every pairwise
 combination of pane width, theme, and locale plus the most recently redesigned
 surface. The remaining lifecycle states and combinations stay covered by the
 automated browser tests.
 
 Its manifest records the capture conditions, including the host-surface
-fallback colors, without hash chains. The adjacent attestation is a few lines:
-the review date, the candidate commit, the reviewed captures, and the result.
+fallback colors, without hash chains. The current captures are an initial
+reference showing that the capture script works, so no attestation stands
+beside them yet. Regenerating the set against a release candidate and
+reviewing it adds one: a few lines recording the review date, the candidate
+commit, the reviewed captures, and the result.
 
 No automated test compares these images; they are the reference for the
 release-time visual review.
