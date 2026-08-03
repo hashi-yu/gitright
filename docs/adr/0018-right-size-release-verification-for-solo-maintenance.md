@@ -23,11 +23,13 @@ covered by the automated browser tests.
 
 This supersedes ADR-0011. Automated proofs that protect user-facing
 contracts — read-only operation, runtime network denial, and package
-isolation — keep their substance but run at a right-sized cadence: the
-double-rebuild dist proof and the Git minimum-version source proof run for
-release candidates and for changes to the layers they verify, not for every
-pull request. Human review concentrates on a few representative captures;
-automation concentrates on invariants that can break users.
+isolation — keep their substance. Their mandatory cadence is right-sized:
+the double-rebuild dist proof and the Git minimum-version source proof must
+run for release candidates and for changes to the layers they verify. A
+routine test suite that happens to exercise them more often is acceptable
+and is not part of this gate. Human review concentrates on a few
+representative captures; automation concentrates on invariants that can
+break users.
 
 ## Considered options
 
