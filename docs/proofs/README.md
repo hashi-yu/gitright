@@ -37,11 +37,14 @@ checks the current macOS system Git and builds the minimum supported Git
 
 ## Human-reviewed visual baseline
 
-`visual-baseline/reference/` holds the approved PNG captures and their
-manifest. The reviewed reference set is five captures covering every pairwise
-combination of pane width, theme, and locale plus the most recently redesigned
-surface; the manifest records their capture conditions without hash chains. No
-automated test or workflow compares these images. They are the reference for
-the release-time visual review described in `docs/verification.md`, and a
-change that visibly affects layout, color, typography, or interaction
-hierarchy requires regeneration and human review before release.
+`visual-baseline/reference/` holds the PNG captures and their manifest. The
+reference set is five captures covering every pairwise combination of pane
+width, theme, and locale plus the most recently redesigned surface; the
+manifest records their capture conditions without hash chains. The current
+captures are an initial reference showing that the capture script works, and
+they carry no attestation; an approved review record is added beside them when
+the set is regenerated and reviewed for a release candidate. No automated test
+or workflow compares these images. They are the reference for the release-time
+visual review described in `docs/verification.md`, and a change that visibly
+affects layout, color, typography, or interaction hierarchy requires
+regeneration and human review before release.
